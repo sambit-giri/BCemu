@@ -186,7 +186,7 @@ class BCM_7param(use_emul):
 			print('k values above {:.3f} h/Mpc are errornous.'.format(self.ks0.max()))
 		if fb is not None: self.fb = fb
 		pp, kk = self.run(BCM_params, nu_Mc=0, z=z)
-		pp_tck = splrep(kk, pp)
-		return splev(k_eval, pp_tck)
+		pp_tck = splrep(kk, pp, k=3)
+		return splev(k_eval, pp_tck, ext=0)
 
 
