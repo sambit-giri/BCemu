@@ -4,7 +4,7 @@ from BCMemu import *
 
 ### Cosmology
 Ob, Om = 0.0463, 0.2793
-bfcemu = BCM_7param(None, Ob, Om)
+bfcemu = BCM_7param(Ob=Ob, Om=Om)
 
 bcmdict = {'log10Mc': 13.32,
 		   'mu'     : 0.93,
