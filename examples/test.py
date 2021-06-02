@@ -25,8 +25,6 @@ p2     = bfcemu.get_boost(2.0, bcmdict, k_eval)
 # Read the BAHAMAS data
 BAH = pickle.load(open('BAHAMAS_data.pkl', 'rb'))
 
-
-
 # Plot
 
 import matplotlib.pyplot as plt
@@ -48,7 +46,7 @@ ax1.set_title('$z=0$')
 ax1.semilogx(BAH['z=0']['k'], BAH['z=0']['S'], '-', c='C0', lw=5, alpha=0.2, label='BAHAMAS')
 ax1.semilogx(k_eval, p0, '--', c='b', lw=3, label='Emulated')
 
-ax1.set_xlim(0.05,12)
+ax1.set_xlim(0.09,12)
 ax1.set_ylim(0.7,1.08)
 ax1.legend()
 ax1.set_xlabel('$k$ ($h$ Mpc)')
@@ -58,7 +56,7 @@ ax2.set_title('$z=0.5$')
 ax2.semilogx(BAH['z=0.5']['k'], BAH['z=0.5']['S'], '-', c='C0', lw=5, alpha=0.2)
 ax2.semilogx(k_eval, p0p5, '--', c='b', lw=3, label='Emulated')
 
-ax2.set_xlim(0.05,12)
+ax2.set_xlim(0.09,12)
 ax2.set_ylim(0.7,1.08)
 #ax2.legend()
 ax2.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
@@ -68,7 +66,7 @@ ax3.set_title('$z=1$')
 ax3.semilogx(BAH['z=1']['k'], BAH['z=1']['S'], '-', c='C0', lw=5, alpha=0.2)
 ax3.semilogx(k_eval, p1, '--', c='b', lw=3, label='Emulated')
 
-ax3.set_xlim(0.05,12)
+ax3.set_xlim(0.09,12)
 ax3.set_ylim(0.7,1.08)
 #ax3.set_legend()
 ax3.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
@@ -78,7 +76,7 @@ ax4.set_title('$z=1.5$')
 ax4.semilogx(BAH['z=1.5']['k'], BAH['z=1.5']['S'], '-', c='C0', lw=5, alpha=0.2)
 ax4.semilogx(k_eval, p1p5, '--', c='b', lw=3, label='Emulated')
 
-ax4.set_xlim(0.05,12)
+ax4.set_xlim(0.09,12)
 ax4.set_ylim(0.7,1.08)
 #ax4.legend()
 ax4.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
@@ -88,7 +86,7 @@ ax5.set_title('$z=2$')
 ax5.semilogx(BAH['z=2']['k'], BAH['z=2']['S'], '-', c='C0', lw=5, alpha=0.2)
 ax5.semilogx(k_eval, p2, '--', c='b', lw=3, label='Emulated')
 
-ax5.set_xlim(0.05,12)
+ax5.set_xlim(0.09,12)
 ax5.set_ylim(0.7,1.08)
 #ax5.legend()
 ax5.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')

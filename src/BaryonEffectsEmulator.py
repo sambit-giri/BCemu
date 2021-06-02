@@ -61,9 +61,21 @@ class use_emul:
 	def check_range(self):
 		mins = [11, 0.0, 2, 1, 3,  0.05, 0.05, 0.10]
 		maxs = [15, 2.0, 8, 4, 11, 0.40, 0.40, 0.25]
+		self.mins = mins 
+		self.maxs = maxs
 		knob = False
 		if mins[0]<=self.log10Mc<=maxs[0] and mins[1]<=self.mu<=maxs[1] and mins[2]<=self.thej<=maxs[2] and mins[3]<=self.gamma<=maxs[3] and mins[4]<=self.delta<=maxs[4] and mins[5]<=self.eta<=maxs[5] and mins[6]<=self.deta<=maxs[6] and mins[7]<=self.fb<=maxs[7]:
 		    knob = True
+		if not knob:
+			print('The parameters provided are outside the allowed range.')
+			print('log10Mc : [{},{}]'.format(self.mins[0],self.maxs[0]))
+			print('mu      : [{},{}]'.format(self.mins[1],self.maxs[1]))
+			print('thej    : [{},{}]'.format(self.mins[2],self.maxs[2]))
+			print('gamma   : [{},{}]'.format(self.mins[3],self.maxs[3]))
+			print('delta   : [{},{}]'.format(self.mins[4],self.maxs[4]))
+			print('eta     : [{},{}]'.format(self.mins[5],self.maxs[5]))
+			print('deta    : [{},{}]'.format(self.mins[6],self.maxs[6]))
+			print('fb      : [{},{}]'.format(self.mins[7],self.maxs[7]))
 		return knob
 
 	# def fix_params(self):
@@ -78,7 +90,8 @@ class use_emul:
 
 	def run(self, BCM_dict, z=0, nu_Mc=0):
 		self.__dict__.update(BCM_dict)
-		self.check_range()
+		the_check = self.check_range()
+		assert the_check
 		assert -0.1<=nu_Mc<=0.01
 		assert 0<=z<=2
 
@@ -166,11 +179,12 @@ class BCM_7param(use_emul):
 	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793):
 		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om)
 	
-	def get_boost(self, z, BCM_params, k_eval):
+	def get_boost(self, z, BCM_params, k_eval, fb=None):
 		if k_eval.min()<self.ks0.min():
 			print('k values below {:.3f} h/Mpc are errornous.'.format(self.ks0.min()))
 		if k_eval.max()>self.ks0.max():
 			print('k values above {:.3f} h/Mpc are errornous.'.format(self.ks0.max()))
+		if fb is not None: self.fb = fb
 		pp, kk = self.run(BCM_params, nu_Mc=0, z=z)
 		pp_tck = splrep(kk, pp)
 		return splev(k_eval, pp_tck)
