@@ -36,14 +36,13 @@ For testing, one can use [pytest](https://docs.pytest.org/en/stable/) or [nosete
 
 ## USAGE
 
-Script to get 
+Script to get the baryonic power suppression.
 
 ```python
 
 import BCMemu
 
 bfcemu = BCMemu.BCM_7param(Ob=0.05, Om=0.27)
-
 bcmdict = {'log10Mc': 13.32,
            'mu'     : 0.93,
            'thej'   : 4.235,  
@@ -52,8 +51,26 @@ bcmdict = {'log10Mc': 13.32,
            'eta'    : 0.15,
            'deta'   : 0.14,
            }
+
+z = 0
 k_eval = 10**np.linspace(-1,1.08,50)
-p_eval = bfcemu.get_boost(0, bcmdict, k_eval)
+p_eval = bfcemu.get_boost(z, bcmdict, k_eval)
+
+```
+
+Visualising the output.
+
+```python
+
+import matplotlib.pyplot as plt
+
+plt.semilogx(k_eval, p_eval, c='C0', lw=3)
+plt.axis([1e-1,12,0.73,1.04])
+plt.yticks([0.7,0.8,0.9,1.0], [0.7,0.8,0.9,1.0])
+plt.xlabel(r'$k$ (h/Mpc)', fontsize=14)
+plt.ylabel(r'$\frac{P_{\rm DM+baryon}}{P_{\rm DM}}$', fontsize=21)
+plt.tight_layout()
+plt.show()
 
 ```
 
