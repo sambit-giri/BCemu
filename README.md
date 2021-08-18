@@ -4,7 +4,7 @@ A python package for modelling baryonic effects in cosmological simulations.
 
 ## Package details
 
-The package provides conatins emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model [[1]](#1), where gravity-only N-body simulation results are manipulated to include the impact of baryonic feedback processes. 
+The package provides conatins emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model [[1]](#1), where gravity-only *N*-body simulation results are manipulated to include the impact of baryonic feedback processes. 
 
 ## INSTALLATION
 
