@@ -74,7 +74,7 @@ plt.tight_layout()
 plt.show()
 
 ```
-<img src="images/Sk_z0_7param.png" width="200">
+<img src="images/Sk_z0_7param.png" width="800">
 
 ## CONTRIBUTING
 
