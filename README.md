@@ -66,13 +66,15 @@ import matplotlib.pyplot as plt
 
 plt.semilogx(k_eval, p_eval, c='C0', lw=3)
 plt.axis([1e-1,12,0.73,1.04])
-plt.yticks([0.7,0.8,0.9,1.0], [0.7,0.8,0.9,1.0])
+plt.yticks(fontsize=14)
+plt.xticks(fontsize=14)
 plt.xlabel(r'$k$ (h/Mpc)', fontsize=14)
 plt.ylabel(r'$\frac{P_{\rm DM+baryon}}{P_{\rm DM}}$', fontsize=21)
 plt.tight_layout()
 plt.show()
 
 ```
+![alt text](images/Sk_z0_7param.png?raw=true)
 
 ## CONTRIBUTING
 
