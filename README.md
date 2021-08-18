@@ -34,6 +34,29 @@ For testing, one can use [pytest](https://docs.pytest.org/en/stable/) or [nosete
     
 	nosetests -v
 
+## USAGE
+
+Script to get 
+
+```python
+
+import BCMemu
+
+bfcemu = BCMemu.BCM_7param(Ob=0.05, Om=0.27)
+
+bcmdict = {'log10Mc': 13.32,
+           'mu'     : 0.93,
+           'thej'   : 4.235,  
+           'gamma'  : 2.25,
+           'delta'  : 6.40,
+           'eta'    : 0.15,
+           'deta'   : 0.14,
+           }
+k_eval = 10**np.linspace(-1,1.08,50)
+p_eval = bfcemu.get_boost(0, bcmdict, k_eval)
+
+```
+
 ## CONTRIBUTING
 
 If you find any bugs or unexpected behavior in the code, please feel free to open a [Github issue](https://github.com/sambit-giri/BCMemu/issues). The issue page is also good if you seek help or have suggestions for us. 
