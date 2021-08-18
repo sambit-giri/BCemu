@@ -4,8 +4,8 @@ Created on 1 June 2021
 Setup script
 '''
 
-from setuptools import setup, find_packages
-#from distutils.core import setup
+#from setuptools import setup, find_packages
+from distutils.core import setup
 
 BCMemu_link = 'https://github.com/sambit-giri/BCMemu.git'
 
@@ -18,6 +18,7 @@ setup(name='BCMemu',
       package_dir = {'BCMemu' : 'src'},
       packages=['BCMemu'],
       package_data={'BCMemu': ['input_data/*.pkl']},
-      install_requires=['numpy','scipy','matplotlib','astropy',
-                        'scikit-learn', 'smt'],
-      zip_safe=False)
+      install_requires=['numpy', 'scipy', 'matplotlib', 'astropy',
+                        'scikit-learn', 'smt', 'cython'],
+      zip_safe=False
+      )

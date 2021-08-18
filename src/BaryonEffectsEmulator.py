@@ -44,6 +44,7 @@ class use_emul:
 		self.load_emulators()
 		# self.fix_params()
 		self.ks0 = ks_emulated
+		self.__dict__.update({'nu_Mc': 0, 'nu_mu': 0, 'nu_thej': 0, 'nu_gamma': 0, 'nu_delta': 0, 'nu_eta': 0, 'nu_deta': 0})
 
 	def load_emulators(self, emul_names=None):
 		if emul_names is not None: self.emul_names = emul_names
@@ -78,21 +79,16 @@ class use_emul:
 			print('fb      : [{},{}]'.format(self.mins[7],self.maxs[7]))
 		return knob
 
-	# def fix_params(self):
-	# 	mu, gamma, delta, deta = 0.93, 2.25, 6.40, 0.240 
-	# 	thej, eta = 4.235, 0.22
-	# 	self.mu    = mu
-	# 	self.gamma = gamma
-	# 	self.delta = delta
-	# 	self.deta  = deta 
-	# 	self.thej  = thej 
-	# 	self.eta   = eta 
-
-	def run(self, BCM_dict, z=0, nu_Mc=0):
+	def run(self, BCM_dict, z=0, nu_dict=None):
 		self.__dict__.update(BCM_dict)
-		the_check = self.check_range()
+
+		if nu_dict is not None: self.__dict__.update(nu_dict)
+
+		the_check = self.check_range
+		nu_Mc = self.nu_Mc
+
 		assert the_check
-		assert -0.1<=nu_Mc<=0.01
+		assert -0.1<=nu_Mc<=0.1
 		assert 0<=z<=2
 
 		if z in self.emul_zs:
@@ -185,7 +181,23 @@ class BCM_7param(use_emul):
 		if k_eval.max()>self.ks0.max():
 			print('k values above {:.3f} h/Mpc are errornous.'.format(self.ks0.max()))
 		if fb is not None: self.fb = fb
-		pp, kk = self.run(BCM_params, nu_Mc=0, z=z)
+		pp, kk = self.run(BCM_params, nu_dict=None, z=z)
+		pp_tck = splrep(kk, pp, k=3)
+		return splev(k_eval, pp_tck, ext=0)
+
+
+class BCM_7param_zdep(use_emul):
+	def __init__(self, nu_dict, emul_names=None, Ob=0.0463, Om=0.2793):
+		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om)
+		self.__dict__.update(nu_dict)
+	
+	def get_boost(self, z, BCM_params, k_eval, fb=None):
+		if k_eval.min()<self.ks0.min():
+			print('k values below {:.3f} h/Mpc are errornous.'.format(self.ks0.min()))
+		if k_eval.max()>self.ks0.max():
+			print('k values above {:.3f} h/Mpc are errornous.'.format(self.ks0.max()))
+		if fb is not None: self.fb = fb
+		pp, kk = self.run(BCM_params, nu_dict=None, z=z)
 		pp_tck = splrep(kk, pp, k=3)
 		return splev(k_eval, pp_tck, ext=0)
 

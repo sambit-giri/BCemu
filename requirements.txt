@@ -1,0 +1,8 @@
+numpy
+scipy
+matplotlib
+astropy
+scikit-learn
+smt
+cython
+pickle
