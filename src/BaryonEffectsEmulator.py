@@ -97,13 +97,6 @@ class use_emul:
 		return None
 
 	def z_evolve_param(self, z):
-		# self.log10Mc *= (1+z)**(-self.nu_Mc)
-		# self.mu      *= (1+z)**(-self.nu_mu)
-		# self.thej    *= (1+z)**(-self.nu_thej)
-		# self.gamma   *= (1+z)**(-self.nu_gamma)
-		# self.delta   *= (1+z)**(-self.nu_delta)
-		# self.eta     *= (1+z)**(-self.nu_eta)
-		# self.deta    *= (1+z)**(-self.nu_deta)
 		self.log10Mc = clip_range(self.log10Mc*(1+z)**(-self.nu_Mc),  self.mins[0], self.maxs[0], message='log10Mc' if self.verbose else None)
 		self.mu      = clip_range(self.mu*(1+z)**(-self.nu_mu),       self.mins[1], self.maxs[1], message='mu' if self.verbose else None)
 		self.thej    = clip_range(self.thej*(1+z)**(-self.nu_thej),   self.mins[2], self.maxs[2], message='thej' if self.verbose else None)
@@ -111,7 +104,10 @@ class use_emul:
 		self.delta   = clip_range(self.delta*(1+z)**(-self.nu_delta), self.mins[4], self.maxs[4], message='delta' if self.verbose else None)
 		self.eta     = clip_range(self.eta*(1+z)**(-self.nu_eta),     self.mins[5], self.maxs[5], message='eta' if self.verbose else None)
 		self.deta    = clip_range(self.deta*(1+z)**(-self.nu_deta),   self.mins[6], self.maxs[6], message='deta' if self.verbose else None)
-		if self.verbose: print('Parameters evolved.')
+		if self.verbose: 
+			if not self.log10Mc or not self.mu or not self.thej or not self.gamma or not self.delta or not self.eta or not self.deta:
+				if not z:
+					print('Parameters evolved.')
 		return None
 
 	def make_theta(self, z):

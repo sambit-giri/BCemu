@@ -39,8 +39,7 @@ For testing, one can use [pytest](https://docs.pytest.org/en/stable/) or [nosete
 Script to get the baryonic power suppression.
 
 ```python
-import numpy as np 
-import matplotlib.pyplot as plt
+
 import BCMemu
 
 bfcemu = BCMemu.BCM_7param(Ob=0.05, Om=0.27)
@@ -57,6 +56,14 @@ z = 0
 k_eval = 10**np.linspace(-1,1.08,50)
 p_eval = bfcemu.get_boost(z, bcmdict, k_eval)
 
+```
+
+Visualising the output.
+
+```python
+
+import matplotlib.pyplot as plt
+
 plt.semilogx(k_eval, p_eval, c='C0', lw=3)
 plt.axis([1e-1,12,0.73,1.04])
 plt.yticks(fontsize=14)
@@ -67,68 +74,7 @@ plt.tight_layout()
 plt.show()
 
 ```
-
 <img src="images/Sk_z0_7param.png" width="400">
-
-We also have a three parameter barynification model. 
-
-```python
-import numpy as np 
-import matplotlib.pyplot as plt
-import BCMemu
-import pickle
-
-BAH = pickle.load(open('examples/BAHAMAS_data.pkl', 'rb'))
-
-bfcemu = BCMemu.BCM_3param(Ob=0.0463, Om=0.2793)
-bcmdict = {'log10Mc': 13.25, 
-           'thej'   : 4.711,  
-           'deta'   : 0.097}
-
-zs = [0,0.5]
-k_eval  = 10**np.linspace(-1,1.08,50)
-p0_eval1 = bfcemu.get_boost(zs[0], bcmdict, k_eval)
-p1_eval1 = bfcemu.get_boost(zs[1], bcmdict, k_eval)
-
-bfcemu = BCMemu.BCM_3param(Ob=0.0463, Om=0.2793)
-bcmdict = {'log10Mc': 13.25, 
-           'thej'   : 4.711,  
-           'deta'   : 0.097,
-           'nu_Mc'  : 0.038,
-           'nu_deta': 0.060}
-
-zs = [0,0.5]
-k_eval  = 10**np.linspace(-1,1.08,50)
-p0_eval2 = bfcemu.get_boost(zs[0], bcmdict, k_eval)
-p1_eval2 = bfcemu.get_boost(zs[1], bcmdict, k_eval)
-
-plt.figure(figsize=(10,4.5))
-plt.subplot(121); plt.title('z=0')
-plt.semilogx(BAH['z=0']['k'], BAH['z=0']['S'], '-', c='k', lw=5, alpha=0.2, label='BAHAMAS')
-plt.semilogx(k_eval, p0_eval1, c='C0', lw=3, label='A', ls='--')
-plt.semilogx(k_eval, p0_eval1, c='C2', lw=3, label='B', ls=':')
-plt.axis([1e-1,12,0.73,1.04])
-plt.yticks(fontsize=14)
-plt.xticks(fontsize=14)
-plt.legend()
-plt.xlabel(r'$k$ (h/Mpc)', fontsize=14)
-plt.ylabel(r'$\frac{P_{\rm DM+baryon}}{P_{\rm DM}}$', fontsize=21)
-plt.subplot(122); plt.title('z=0.5')
-plt.semilogx(BAH['z=0.5']['k'], BAH['z=0.5']['S'], '-', c='k', lw=5, alpha=0.2, label='BAHAMAS')
-plt.semilogx(k_eval, p1_eval1, c='C0', lw=3, label='A', ls='--')
-plt.semilogx(k_eval, p1_eval2, c='C2', lw=3, label='B', ls=':')
-plt.axis([1e-1,12,0.73,1.04])
-plt.yticks(fontsize=14)
-plt.xticks(fontsize=14)
-plt.xlabel(r'$k$ (h/Mpc)', fontsize=14)
-plt.ylabel(r'$\frac{P_{\rm DM+baryon}}{P_{\rm DM}}$', fontsize=21)
-plt.tight_layout()
-plt.show()
-
-
-
-```
-
 
 ## CONTRIBUTING
 
