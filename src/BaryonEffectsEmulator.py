@@ -29,6 +29,22 @@ def ps_suppression_8param(theta, emul, return_std=False):
     # print(out.shape)
     return out.squeeze()
 
+def nearest_element_idx(arr, a, both=True):
+	if both:
+		dist = np.abs(arr-a)
+		dist_arg = np.argsort(dist)
+		return  dist_arg[0], dist_arg[1]
+	else:
+		return np.abs(arr-a).argmin()
+
+def clip_range(x, mn, mx, message=None):
+	if x<mn: out = mn
+	elif x>mx: out = mx
+	else: out = x
+	if out!=x:
+		if message is not None: print('{} set from {:.3f} to {:.3f}'.format(message,x,out))
+	return out 
+
 class use_emul:
 	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793, verbose=True):
 		if emul_names is None:
@@ -81,13 +97,20 @@ class use_emul:
 		return None
 
 	def z_evolve_param(self, z):
-		self.log10Mc *= (1+z)**(-self.nu_Mc)
-		self.mu      *= (1+z)**(-self.nu_mu)
-		self.thej    *= (1+z)**(-self.nu_thej)
-		self.gamma   *= (1+z)**(-self.nu_gamma)
-		self.delta   *= (1+z)**(-self.nu_delta)
-		self.eta     *= (1+z)**(-self.nu_eta)
-		self.deta    *= (1+z)**(-self.nu_deta)
+		# self.log10Mc *= (1+z)**(-self.nu_Mc)
+		# self.mu      *= (1+z)**(-self.nu_mu)
+		# self.thej    *= (1+z)**(-self.nu_thej)
+		# self.gamma   *= (1+z)**(-self.nu_gamma)
+		# self.delta   *= (1+z)**(-self.nu_delta)
+		# self.eta     *= (1+z)**(-self.nu_eta)
+		# self.deta    *= (1+z)**(-self.nu_deta)
+		self.log10Mc = clip_range(self.log10Mc*(1+z)**(-self.nu_Mc),  self.mins[0], self.maxs[0], message='log10Mc' if self.verbose else None)
+		self.mu      = clip_range(self.mu*(1+z)**(-self.nu_mu),       self.mins[1], self.maxs[1], message='mu' if self.verbose else None)
+		self.thej    = clip_range(self.thej*(1+z)**(-self.nu_thej),   self.mins[2], self.maxs[2], message='thej' if self.verbose else None)
+		self.gamma   = clip_range(self.gamma*(1+z)**(-self.nu_gamma), self.mins[3], self.maxs[3], message='gamma' if self.verbose else None)
+		self.delta   = clip_range(self.delta*(1+z)**(-self.nu_delta), self.mins[4], self.maxs[4], message='delta' if self.verbose else None)
+		self.eta     = clip_range(self.eta*(1+z)**(-self.nu_eta),     self.mins[5], self.maxs[5], message='eta' if self.verbose else None)
+		self.deta    = clip_range(self.deta*(1+z)**(-self.nu_deta),   self.mins[6], self.maxs[6], message='deta' if self.verbose else None)
 		if self.verbose: print('Parameters evolved.')
 		return None
 
@@ -177,13 +200,6 @@ ks_emulated = np.array([ 0.0341045 ,  0.05861015,  0.08348237,  0.10855948,  0.1
 		       11.64610273, 11.78114023, 11.9283919 , 12.0756593 , 12.22293269,
 		       12.37017986, 12.51740232])
 
-def nearest_element_idx(arr, a, both=True):
-	if both:
-		dist = np.abs(arr-a)
-		dist_arg = np.argsort(dist)
-		return  dist_arg[0], dist_arg[1]
-	else:
-		return np.abs(arr-a).argmin()
 
 
 class BCM_7param(use_emul):
