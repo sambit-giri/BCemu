@@ -130,7 +130,7 @@ plt.show()
 
 ```
 
-<img src="images/Sk_3param_multiz.png" width="400">
+<img src="images/Sk_3param_multiz.png" width="800">
 
 
 ## CONTRIBUTING
