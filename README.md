@@ -70,7 +70,7 @@ plt.show()
 
 <img src="images/Sk_z0_7param.png" width="400">
 
-We also have a three parameter barynification model. 
+The package also has a three parameter barynification model. Below an example fit to the BAHAMAS simulation result is shown. Model A assumes all the three parameters to be independent of redshift while model B assumes the parameters to be redshift dependent ($X=X_0 (1+z)^{\nu}$).
 
 ```python
 import numpy as np 
@@ -95,6 +95,7 @@ bcmdict = {'log10Mc': 13.25,
            'thej'   : 4.711,  
            'deta'   : 0.097,
            'nu_Mc'  : 0.038,
+           'nu_thej': 0.0,
            'nu_deta': 0.060}
 
 zs = [0,0.5]
@@ -128,6 +129,8 @@ plt.show()
 
 
 ```
+
+<img src="images/Sk_3param_multiz.png" width="400">
 
 
 ## CONTRIBUTING
