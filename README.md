@@ -71,7 +71,9 @@ plt.show()
 <img src="images/Sk_z0_7param.png" width="400">
 
 The package also has a three parameter barynification model. Model A assumes all the three parameters to be independent of redshift while model B assumes the parameters to be redshift dependent via the following form: 
+
 ![](https://latex.codecogs.com/svg.latex?\inline&space;X(z)&space;=&space;X_0(1&plus;z)^\nu).
+
 Below an example fit to the BAHAMAS simulation result is shown.
 
 ```python
