@@ -4,7 +4,7 @@ from BCMemu import *
 
 ### Cosmology
 Ob, Om = 0.0463, 0.2793
-bfcemu = BCM_7param(Ob=Ob, Om=Om)
+bfcemu = BCM_7param(Ob=Ob, Om=Om, verbose=False); bfcemu.print_param_names()
 
 bcmdict = {'log10Mc': 13.32,
 		   'mu'     : 0.93,
@@ -92,6 +92,34 @@ ax5.set_ylim(0.7,1.08)
 ax5.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
 ax5.set_ylabel('$\mathcal{S}(k)$')
 
+# plt.tight_layout()
+# plt.show()
+
+
+
+bcmdict = {'log10Mc': 13.32,
+		   'mu'     : 0.93,
+		   'thej'   : 4.235,  
+		   'gamma'  : 2.25,
+		   'delta'  : 6.40,
+		   'eta'    : 0.15,
+		   'deta'   : 0.14,
+		   'nu_Mc'  : 0.05,
+		   }
+k_eval = 10**np.linspace(-1,1.08,50)
+p0     = bfcemu.get_boost(0.0, bcmdict, k_eval)
+p0p5   = bfcemu.get_boost(0.5, bcmdict, k_eval)
+p1     = bfcemu.get_boost(1.0, bcmdict, k_eval)
+p1p5   = bfcemu.get_boost(1.5, bcmdict, k_eval)
+p2     = bfcemu.get_boost(2.0, bcmdict, k_eval)
+
+
+ax1.semilogx(k_eval, p0, '-.', c='g', lw=3, label='Emulated')
+ax2.semilogx(k_eval, p0p5, '-.', c='g', lw=3, label='Emulated')
+ax3.semilogx(k_eval, p1, '-.', c='g', lw=3, label='Emulated')
+ax4.semilogx(k_eval, p1p5, '-.', c='g', lw=3, label='Emulated')
+ax5.semilogx(k_eval, p2, '-.', c='g', lw=3, label='Emulated')
 plt.tight_layout()
 plt.show()
+
 

@@ -30,7 +30,7 @@ def ps_suppression_8param(theta, emul, return_std=False):
     return out.squeeze()
 
 class use_emul:
-	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793):
+	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793, verbose=True):
 		if emul_names is None:
 			emul_names = {'0'  : path_to_emu0_file, 
 						  '0.5': path_to_emu0p5_file,
@@ -39,10 +39,10 @@ class use_emul:
 						  '2'  : path_to_emu2_file
 						  }
 		self.emul_names = emul_names
+		self.verbose    = verbose
 		self.fb = Ob/Om
-		print('Baryon fraction is set to {:.3f}'.format(self.fb))
+		if self.verbose: print('Baryon fraction is set to {:.3f}'.format(self.fb))
 		self.load_emulators()
-		# self.fix_params()
 		self.ks0 = ks_emulated
 		self.__dict__.update({'nu_Mc': 0, 'nu_mu': 0, 'nu_thej': 0, 'nu_gamma': 0, 'nu_delta': 0, 'nu_eta': 0, 'nu_deta': 0})
 
@@ -77,35 +77,50 @@ class use_emul:
 			print('eta     : [{},{}]'.format(self.mins[5],self.maxs[5]))
 			print('deta    : [{},{}]'.format(self.mins[6],self.maxs[6]))
 			print('fb      : [{},{}]'.format(self.mins[7],self.maxs[7]))
-		return knob
+		assert knob
+		return None
 
-	def run(self, BCM_dict, z=0, nu_dict=None):
+	def z_evolve_param(self, z):
+		self.log10Mc *= (1+z)**(-self.nu_Mc)
+		self.mu      *= (1+z)**(-self.nu_mu)
+		self.thej    *= (1+z)**(-self.nu_thej)
+		self.gamma   *= (1+z)**(-self.nu_gamma)
+		self.delta   *= (1+z)**(-self.nu_delta)
+		self.eta     *= (1+z)**(-self.nu_eta)
+		self.deta    *= (1+z)**(-self.nu_deta)
+		if self.verbose: print('Parameters evolved.')
+		return None
+
+	def make_theta(self, z):
+		self.z_evolve_param(z)
+		theta = [self.log10Mc, self.mu, self.thej, self.gamma, self.delta, self.eta, self.deta, self.fb]		
+		return theta 
+
+	def run(self, BCM_dict, z=0, nu_dict=None, return_std=False):
+		assert 0<=z<=2
+		self.BCM_dict = BCM_dict
+
 		self.__dict__.update(BCM_dict)
-
 		if nu_dict is not None: self.__dict__.update(nu_dict)
 
-		the_check = self.check_range
-		nu_Mc = self.nu_Mc
-
-		assert the_check
-		assert -0.1<=nu_Mc<=0.1
-		assert 0<=z<=2
+		self.check_range()
 
 		if z in self.emul_zs:
-			theta = [self.log10Mc*(1+z)**nu_Mc, self.mu, self.thej, self.gamma, self.delta, self.eta, self.deta, self.fb]
+			theta = self.make_theta(z)
 			emu0  = self.emulators[self.emul_zs==z][0]
-			# print(emu0)
-			ps = ps_suppression_8param(theta, emu0, return_std=False)
-			return ps, self.ks0
+			ps = ps_suppression_8param(theta, emu0, return_std=return_std)
+			if return_std: return ps[0], self.ks0, ps[1]
+			else: return ps, self.ks0
 		else:
 			i0, i1 = nearest_element_idx(self.emul_zs, z)
-			theta0 = [self.log10Mc*(1+self.emul_zs[i0])**nu_Mc, self.mu, self.thej, self.gamma, self.delta, self.eta, self.deta, self.fb]
+			theta0 = self.make_theta(self.emul_zs[i0]) 
 			emu0   = self.emulators[i0]
-			theta1 = [self.log10Mc*(1+self.emul_zs[i1])**nu_Mc, self.mu, self.thej, self.gamma, self.delta, self.eta, self.deta, self.fb]
+			theta1 = self.make_theta(self.emul_zs[i1]) 
 			emu1   = self.emulators[i1]
-			ps0 = ps_suppression_8param(theta0, emu0, return_std=False)
-			ps1 = ps_suppression_8param(theta1, emu1, return_std=False)
-			return ps0 + (ps1-ps0)*(z-self.emul_zs[i0])/(self.emul_zs[i1]-self.emul_zs[i0]), self.ks0
+			ps0 = ps_suppression_8param(theta0, emu0, return_std=return_std)
+			ps1 = ps_suppression_8param(theta1, emu1, return_std=return_std)
+			if return_std: return ps0[0] + (ps1[0]-ps0[0])*(z-self.emul_zs[i0])/(self.emul_zs[i1]-self.emul_zs[i0]), self.ks0, ps0[1] + (ps1[1]-ps0[1])*(z-self.emul_zs[i0])/(self.emul_zs[i1]-self.emul_zs[i0])
+			else: return ps0 + (ps1-ps0)*(z-self.emul_zs[i0])/(self.emul_zs[i1]-self.emul_zs[i0]), self.ks0
 
 
 path_to_emu0_file   = pkg_resources.resource_filename('BCMemu', 'input_data/kpls_emulator_z0_nComp3.pkl')
@@ -172,8 +187,16 @@ def nearest_element_idx(arr, a, both=True):
 
 
 class BCM_7param(use_emul):
-	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793):
-		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om)
+	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793, verbose=True):
+		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om, verbose=verbose)
+
+	def print_param_names(self):
+		print('\nBaryonification parameters:')
+		print('--------------------------')
+		print('log10Mc, mu, thej, gamma, delta, eta, deta\n')
+		print('Redshift evolution parameters:')
+		print('-----------------------------')
+		print('nu_Mc, nu_mu, nu_thej, nu_gamma, nu_delta, nu_eta, nu_deta\n')
 	
 	def get_boost(self, z, BCM_params, k_eval, fb=None):
 		if k_eval.min()<self.ks0.min():
@@ -181,23 +204,34 @@ class BCM_7param(use_emul):
 		if k_eval.max()>self.ks0.max():
 			print('k values above {:.3f} h/Mpc are errornous.'.format(self.ks0.max()))
 		if fb is not None: self.fb = fb
-		pp, kk = self.run(BCM_params, nu_dict=None, z=z)
+		pp, kk = self.run(BCM_params, z=z)
 		pp_tck = splrep(kk, pp, k=3)
 		return splev(k_eval, pp_tck, ext=0)
 
 
-class BCM_7param_zdep(use_emul):
-	def __init__(self, nu_dict, emul_names=None, Ob=0.0463, Om=0.2793):
-		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om)
-		self.__dict__.update(nu_dict)
+class BCM_3param(use_emul):
+	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793, verbose=True):
+		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om, verbose=verbose)
+
+	def print_param_names(self):
+		print('\nBaryonification parameters:')
+		print('--------------------------')
+		print('log10Mc, thej, deta\n')
+		print('Redshift evolution parameters:')
+		print('-----------------------------')
+		print('nu_Mc, nu_thej, nu_deta\n')
 	
 	def get_boost(self, z, BCM_params, k_eval, fb=None):
+		BCM_params['delta'] = 7.0
+		BCM_params['eta']   = 0.2
+		BCM_params['mu']    = 1.0
+		BCM_params['gamma'] = 2.5
 		if k_eval.min()<self.ks0.min():
 			print('k values below {:.3f} h/Mpc are errornous.'.format(self.ks0.min()))
 		if k_eval.max()>self.ks0.max():
 			print('k values above {:.3f} h/Mpc are errornous.'.format(self.ks0.max()))
 		if fb is not None: self.fb = fb
-		pp, kk = self.run(BCM_params, nu_dict=None, z=z)
+		pp, kk = self.run(BCM_params, z=z)
 		pp_tck = splrep(kk, pp, k=3)
 		return splev(k_eval, pp_tck, ext=0)
 
