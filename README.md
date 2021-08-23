@@ -4,7 +4,7 @@ A python package for modelling baryonic effects in cosmological simulations.
 
 ## Package details
 
-The package provides conatins emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model [[1]](#1), where gravity-only *N*-body simulation results are manipulated to include the impact of baryonic feedback processes. 
+The package provides emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model [[1]](#1), where gravity-only *N*-body simulation results are manipulated to include the impact of baryonic feedback processes. For detailed description, see Ref. [[2]](#2).
 
 ## INSTALLATION
 
@@ -144,3 +144,6 @@ If you find any bugs or unexpected behavior in the code, please feel free to ope
 ## References
 <a id="1">[1]</a> 
 Schneider, A., Teyssier, R., Stadel, J., Chisari, N. E., Le Brun, A. M., Amara, A., & Refregier, A. (2019). Quantifying baryon effects on the matter power spectrum and the weak lensing shear correlation. Journal of Cosmology and Astroparticle Physics, 2019(03), 020.
+<a id="2">[2]</a> 
+Giri, S. K. & Schneider, A. (2021). Emulation of baryonic effects on the matter power spectrum and constraints from galaxy cluster data. arXiv:2108.08863.
+
