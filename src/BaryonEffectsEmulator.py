@@ -56,9 +56,8 @@ class use_emul:
 						  }
 		self.emul_names = emul_names
 		self.verbose    = verbose
-		self.fb = Ob/Om
-		if self.verbose: print('Baryon fraction is set to {:.3f}'.format(self.fb))
 		self.load_emulators()
+		self.update_cosmology(Ob, Om)
 		self.ks0 = ks_emulated
 		self.__dict__.update({'nu_Mc': 0, 'nu_mu': 0, 'nu_thej': 0, 'nu_gamma': 0, 'nu_delta': 0, 'nu_eta': 0, 'nu_deta': 0})
 
@@ -74,6 +73,10 @@ class use_emul:
 		print('Emulators loaded.')
 		self.emulators = np.array(emulators)
 		self.emul_zs   = np.array(zs)
+
+	def update_cosmology(self, Ob, Om):
+		self.fb = Ob/Om
+		if self.verbose: print('Baryon fraction is set to {:.3f}'.format(self.fb))
 
 	def check_range(self):
 		mins = [11, 0.0, 2, 1, 3,  0.05, 0.05, 0.10]
