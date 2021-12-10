@@ -7,9 +7,9 @@ Setup script
 #from setuptools import setup, find_packages
 from distutils.core import setup
 
-BCMemu_link = 'https://github.com/sambit-giri/BCMemu.git'
+BCMemu_link = 'https://github.com/sambit-giri/BCemu.git'
 
-setup(name='BCMemu',
+setup(name='BCemu',
       version='0.0.1',
       description='Using emulators to implement baryonic effects.',
       url=BCMemu_link,
