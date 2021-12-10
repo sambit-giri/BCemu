@@ -1,4 +1,4 @@
-# BCMemu
+# BCemu
 
 A python package for modelling baryonic effects in cosmological simulations.
 
@@ -10,7 +10,7 @@ The package provides emulators to model the suppression in the power spectrum du
 
 To install the package from source, one should clone this package running the following::
 
-    git clone https://github.com/sambit-giri/BCMemu.git
+    git clone https://github.com/sambit-giri/BCemu.git
 
 To install the package in the standard location, run the following in the root directory::
 
@@ -22,7 +22,7 @@ In order to install it in a separate directory::
 
 One can also install it using pip by running the following command::
 
-    pip install git+https://github.com/sambit-giri/BCMemu.git
+    pip install git+https://github.com/sambit-giri/BCemu.git
 
 The dependencies should be installed automatically during the installation process. If they fail for some reason, you can install them manually before installing BCMemu. The list of required packages can be found in the requirements.txt file present in the root directory.
 
@@ -79,12 +79,12 @@ Below an example fit to the BAHAMAS simulation result is shown.
 ```python
 import numpy as np 
 import matplotlib.pyplot as plt
-import BCMemu
+import BCemu
 import pickle
 
 BAH = pickle.load(open('examples/BAHAMAS_data.pkl', 'rb'))
 
-bfcemu = BCMemu.BCM_3param(Ob=0.0463, Om=0.2793)
+bfcemu = BCemu.BCM_3param(Ob=0.0463, Om=0.2793)
 bcmdict = {'log10Mc': 13.25, 
            'thej'   : 4.711,  
            'deta'   : 0.097}
@@ -94,7 +94,7 @@ k_eval  = 10**np.linspace(-1,1.08,50)
 p0_eval1 = bfcemu.get_boost(zs[0], bcmdict, k_eval)
 p1_eval1 = bfcemu.get_boost(zs[1], bcmdict, k_eval)
 
-bfcemu = BCMemu.BCM_3param(Ob=0.0463, Om=0.2793)
+bfcemu = BCemu.BCM_3param(Ob=0.0463, Om=0.2793)
 bcmdict = {'log10Mc': 13.25, 
            'thej'   : 4.711,  
            'deta'   : 0.097,
