@@ -143,8 +143,8 @@ If you find any bugs or unexpected behavior in the code, please feel free to ope
 
 ## References
 <a id="1">[1]</a> 
-Schneider, A., Teyssier, R., Stadel, J., Chisari, N. E., Le Brun, A. M., Amara, A., & Refregier, A. (2019). Quantifying baryon effects on the matter power spectrum and the weak lensing shear correlation. Journal of Cosmology and Astroparticle Physics, 2019(03), 020.
+Schneider, A., Teyssier, R., Stadel, J., Chisari, N. E., Le Brun, A. M., Amara, A., & Refregier, A. (2019). Quantifying baryon effects on the matter power spectrum and the weak lensing shear correlation. Journal of Cosmology and Astroparticle Physics, 2019(03), 020. [arXiv:1810.08629](https://arxiv.org/abs/1810.08629).
 
 <a id="2">[2]</a> 
-Giri, S. K. & Schneider, A. (2021). Emulation of baryonic effects on the matter power spectrum and constraints from galaxy cluster data. arXiv:2108.08863.
+Giri, S. K. & Schneider, A. (2021). Emulation of baryonic effects on the matter power spectrum and constraints from galaxy cluster data. Journal of Cosmology and Astroparticle Physics, 2021(12), 046. [arXiv:2108.08863](https://arxiv.org/abs/2108.08863).
 
