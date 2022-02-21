@@ -5,9 +5,8 @@ Created by Sambit K. Giri
 import numpy as np
 from scipy import special
 from scipy.interpolate import splev, splrep
-import os 
-import pickle
-import pkg_resources
+import os, pickle, pkg_resources
+from glob import glob
 
 path_to_emu0_file   = pkg_resources.resource_filename('BCemu', 'input_data/kpls_emulator_z0_nComp3.pkl')
 path_to_emu0p5_file = pkg_resources.resource_filename('BCemu', 'input_data/kpls_emulator_z0p5_nComp3.pkl')
