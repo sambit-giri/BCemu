@@ -3,6 +3,6 @@ scipy
 matplotlib
 astropy
 scikit-learn
-smt
+smt==1.0.0
 cython
 pickle
