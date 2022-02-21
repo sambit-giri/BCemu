@@ -8,7 +8,11 @@ The package provides emulators to model the suppression in the power spectrum du
 
 ## INSTALLATION
 
-To install the package from source, one should clone this package running the following::
+One can install a stable version of this package using pip by running the following command::
+
+    pip install BCemu
+
+In order to use the latest version, one can clone this package running the following::
 
     git clone https://github.com/sambit-giri/BCemu.git
 
