@@ -7,7 +7,6 @@ For example:
 >>> import BCemu
 >>> help(BCemu.use_emul)
 '''
-from . import download
 import sys
 from .BaryonEffectsEmulator import *
 from . import kpls 
