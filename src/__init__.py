@@ -4,10 +4,10 @@ Emulator is a Python package for constructing emulators.
 You can also get documentation for all routines directory from
 the interpreter using Python's built-in help() function.
 For example:
->>> import BCMemu
->>> help(BCMemu.use_emul)
+>>> import BCemu
+>>> help(BCemu.use_emul)
 '''
-
+from . import download
 import sys
 from .BaryonEffectsEmulator import *
 from . import kpls 
