@@ -63,9 +63,10 @@ ks_emulated = np.array([ 0.0341045 ,  0.05861015,  0.08348237,  0.10855948,  0.1
 		       12.37017986, 12.51740232])
 
 
-# if not ( len(glob(path_to_emu0_file))*len(glob(path_to_emu0p5_file))*len(glob(path_to_emu1_file))*len(glob(path_to_emu1p5_file))*len(glob(path_to_emu2_file)) ):
-# 	from . import download
-# 	download.download_emulators()
+def check_trained_emulators():
+	if not ( len(glob(path_to_emu0_file))*len(glob(path_to_emu0p5_file))*len(glob(path_to_emu1_file))*len(glob(path_to_emu1p5_file))*len(glob(path_to_emu2_file)) ):
+		from . import download
+		download.download_emulators()
 
 def ps_suppression_8param(theta, emul, return_std=False):
     log10Mc, mu, thej, gamma, delta, eta, deta, fb = theta
@@ -114,6 +115,7 @@ class use_emul:
 						  }
 		self.emul_names = emul_names
 		self.verbose    = verbose
+		check_trained_emulators()
 		self.load_emulators()
 		self.update_cosmology(Ob, Om)
 		self.ks0 = ks_emulated
@@ -123,21 +125,11 @@ class use_emul:
 		if emul_names is not None: self.emul_names = emul_names
 		emulators = []
 		zs = []
-		try:
-			for ke in self.emul_names:
-				zs.append(float(ke))
-				emu = pickle.load(open(self.emul_names[ke],'rb'))
-				emu.options['print_prediction'] = False
-				emulators.append(emu)
-		except:
-			from . import download
-			download.download_emulators()
-			for ke in self.emul_names:
-				zs.append(float(ke))
-				emu = pickle.load(open(self.emul_names[ke],'rb'))
-				emu.options['print_prediction'] = False
-				emulators.append(emu)
-
+		for ke in self.emul_names:
+			zs.append(float(ke))
+			emu = pickle.load(open(self.emul_names[ke],'rb'))
+			emu.options['print_prediction'] = False
+			emulators.append(emu)
 		print('Emulators loaded.')
 		self.emulators = np.array(emulators)
 		self.emul_zs   = np.array(zs)
