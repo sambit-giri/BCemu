@@ -28,7 +28,7 @@ One can also install it using pip by running the following command::
 
     pip install git+https://github.com/sambit-giri/BCemu.git
 
-The dependencies should be installed automatically during the installation process. If they fail for some reason, you can install them manually before installing BCMemu. The list of required packages can be found in the requirements.txt file present in the root directory.
+The dependencies should be installed automatically during the installation process. If they fail for some reason, you can install them manually before installing BCemu. The list of required packages can be found in the requirements.txt file present in the root directory.
 
 ### Tests
 
@@ -45,9 +45,9 @@ Script to get the baryonic power suppression.
 ```python
 import numpy as np 
 import matplotlib.pyplot as plt
-import BCMemu
+import BCemu
 
-bfcemu = BCMemu.BCM_7param(Ob=0.05, Om=0.27)
+bfcemu = BCemu.BCM_7param(Ob=0.05, Om=0.27)
 bcmdict = {'log10Mc': 13.32,
            'mu'     : 0.93,
            'thej'   : 4.235,  
