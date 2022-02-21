@@ -1,7 +1,7 @@
 import os, time
 import wget, pkg_resources
 
-def download_emulators()
+def download_emulators():
 	print('Downloading emulators...')
 
 	path_to_emul_folder = pkg_resources.resource_filename('BCemu', 'input_data/')
