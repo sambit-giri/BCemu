@@ -62,8 +62,10 @@ ks_emulated = np.array([ 0.0341045 ,  0.05861015,  0.08348237,  0.10855948,  0.1
 		       11.64610273, 11.78114023, 11.9283919 , 12.0756593 , 12.22293269,
 		       12.37017986, 12.51740232])
 
+
 if not ( len(glob(path_to_emu0_file))*len(glob(path_to_emu0p5_file))*len(glob(path_to_emu1_file))*len(glob(path_to_emu1p5_file))*len(glob(path_to_emu2_file)) ):
 	from . import download
+	download.download_emulators()
 
 def ps_suppression_8param(theta, emul, return_std=False):
     log10Mc, mu, thej, gamma, delta, eta, deta, fb = theta

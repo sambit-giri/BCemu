@@ -9,6 +9,7 @@ For example:
 '''
 import sys
 from .BaryonEffectsEmulator import *
+from . import download
 from . import kpls 
 import smt
 
