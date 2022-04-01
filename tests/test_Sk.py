@@ -1,6 +1,6 @@
 import numpy as np 
 import pickle
-from BCMemu import * 
+from BCemu import * 
 
 ### Cosmology
 Ob, Om = 0.0463, 0.2793
