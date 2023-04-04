@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: BCemu
-Version: 1.0
+Version: 1.1
 Summary: Using emulators to implement baryonic effects.
 Home-page: https://github.com/sambit-giri/BCemu.git
 Author: Sambit Giri
