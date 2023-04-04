@@ -1,6 +1,6 @@
 import numpy as np 
 import pickle
-from BCMemu import * 
+from BCemu import * 
 
 ### Cosmology
 Ob, Om = 0.0463, 0.2793
@@ -20,7 +20,6 @@ p0p5   = bfcemu.get_boost(0.5, bcmdict, k_eval)
 p1     = bfcemu.get_boost(1.0, bcmdict, k_eval)
 p1p5   = bfcemu.get_boost(1.5, bcmdict, k_eval)
 p2     = bfcemu.get_boost(2.0, bcmdict, k_eval)
-
 
 # Read the BAHAMAS data
 BAH = pickle.load(open('BAHAMAS_data.pkl', 'rb'))
@@ -122,4 +121,35 @@ ax5.semilogx(k_eval, p2, '-.', c='g', lw=3, label='Emulated')
 plt.tight_layout()
 plt.show()
 
+exit()
+
+import numpy as np 
+import pickle
+from BCemu import * 
+
+### Cosmology
+Ob, Om = 0.0463, 0.2793
+bfcemu = BCM_7param(Ob=Ob, Om=Om, verbose=False,
+					below_kmin=1, #'extrapolate', 
+					above_kmax='extrapolate'
+					)
+
+bcmdict = {'log10Mc': 13.32,
+		   'mu'     : 0.93,
+		   'thej'   : 4.235,  
+		   'gamma'  : 2.25,
+		   'delta'  : 6.40,
+		   'eta'    : 0.15,
+		   'deta'   : 0.14,
+		   }
+# k0,k0p5,k1,k1p5,k2 = [k_eval for _ in range(5)]
+# X = np.array([k0,k0p5,k1,k1p5,k2])
+# Y = np.array([[0,0.5,1,1.5,2] for _ in range(x.shape[1])]).T
+# P = np.array([p0,p0p5,p1,p1p5,p2])
+# pnew = np.array([splev(z,splrep([0,0.5,1,1.5,2], P[:,ii], s=0, k=1)) for ii,ki in enumerate(k0)])
+
+
+## Beyond the trained k and redshift range.
+kk = 10**np.linspace(-2,1.08,50)
+pp = bfcemu.get_boost(0.0, bcmdict, kk)
 
