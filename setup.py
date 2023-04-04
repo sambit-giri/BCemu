@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 BCMemu_link = 'https://github.com/sambit-giri/BCemu.git'
 
 setup(name='BCemu',
-      version='1.0',
+      version='1.1',
       description='Using emulators to implement baryonic effects.',
       url=BCMemu_link,
       author='Sambit Giri',
