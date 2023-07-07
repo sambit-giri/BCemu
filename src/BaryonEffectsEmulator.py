@@ -232,7 +232,7 @@ class BCM_7param(use_emul):
 			p1p0, kk = self.run(BCM_params, z=1)
 			p1p5, kk = self.run(BCM_params, z=1.5)
 			p2p0, kk = self.run(BCM_params, z=2)
-			P = np.array([p0p0,p0p5,p1p5,p1p5,p2p0])
+			P = np.array([p0p0,p0p5,p1p0,p1p5,p2p0])
 			pp = np.array([splev(z,splrep([0,0.5,1,1.5,2], P[:,ii], s=0, k=1)) 
 									for ii,ki in enumerate(kk)])
 			if z>2:
