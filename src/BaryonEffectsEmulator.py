@@ -130,7 +130,7 @@ class use_emul:
 			emu = pickle.load(open(self.emul_names[ke],'rb'))
 			emu.options['print_prediction'] = False
 			emulators.append(emu)
-		print('Emulators loaded.')
+		if self.verbose: print('Emulators loaded.')
 		self.emulators = np.array(emulators)
 		self.emul_zs   = np.array(zs)
 
