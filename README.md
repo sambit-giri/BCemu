@@ -1,10 +1,10 @@
 # BCemu
 
-A python package for modelling baryonic effects in cosmological simulations.
+A Python package for modelling baryonic effects in cosmological simulations.
 
 ## Package details
 
-The package provides emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model [[1]](#1), where gravity-only *N*-body simulation results are manipulated to include the impact of baryonic feedback processes. For detailed description, see Ref. [[2]](#2).
+The package provides emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model [[1]](#1), where gravity-only *N*-body simulation results are manipulated to include the impact of baryonic feedback processes. For a detailed description, see Ref. [[2]](#2).
 
 ## INSTALLATION
 
@@ -28,11 +28,11 @@ One can also install it using pip by running the following command::
 
     pip install git+https://github.com/sambit-giri/BCemu.git
 
-The dependencies should be installed automatically during the installation process. If they fail for some reason, you can install them manually before installing BCemu. The list of required packages can be found in the requirements.txt file present in the root directory.
+The dependencies should be installed automatically during the installation process. If they fail, you can install them manually before installing BCemu. The list of required packages can be found in the requirements.txt file in the root directory.
 
 ### Tests
 
-For testing, one can use [pytest](https://docs.pytest.org/en/stable/) or [nosetests](https://nose.readthedocs.io/en/latest/). Both packages can be installed using pip. To run all the test script, run the either of the following::
+For testing, one can use [pytest](https://docs.pytest.org/en/stable/) or [nosetests](https://nose.readthedocs.io/en/latest/). Both packages can be installed using pip. To run all the test script, run either of the following::
 
     python -m pytest tests
     
@@ -74,7 +74,7 @@ plt.show()
 
 <img src="images/Sk_z0_7param.png" width="400">
 
-The package also has a three parameter barynification model. Model A assumes all the three parameters to be independent of redshift while model B assumes the parameters to be redshift dependent via the following form: 
+The package also has a three-parameter baryonification model. Model A assumes all three parameters to be independent of redshift while model B assumes the parameters to be redshift-dependent via the following form: 
 
 ![](https://latex.codecogs.com/svg.latex?\inline&space;X(z)&space;=&space;X_0(1&plus;z)^{-\nu}).
 
@@ -143,7 +143,7 @@ plt.show()
 
 ## CONTRIBUTING
 
-If you find any bugs or unexpected behavior in the code, please feel free to open a [Github issue](https://github.com/sambit-giri/BCMemu/issues). The issue page is also good if you seek help or have suggestions for us. 
+If you find any bugs or unexpected behaviour in the code, please feel free to open a [Github issue](https://github.com/sambit-giri/BCMemu/issues). The issue page is also good if you seek help or have suggestions for us. 
 
 ## References
 <a id="1">[1]</a> 
