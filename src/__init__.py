@@ -11,6 +11,7 @@ import sys
 from .BaryonEffectsEmulator import *
 from . import download
 from . import kpls 
+from .datasets import *
 import smt
 
 

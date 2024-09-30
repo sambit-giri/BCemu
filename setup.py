@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 BCMemu_link = 'https://github.com/sambit-giri/BCemu.git'
 
 setup(name='BCemu',
-      version='1.1.1',
+      version='1.1.2',
       description='Using emulators to implement baryonic effects.',
       url=BCMemu_link,
       author='Sambit Giri',
@@ -19,7 +19,7 @@ setup(name='BCemu',
       # package_dir={"": "src"},
       package_dir = {'BCemu' : 'src'},
       packages=['BCemu'],
-      package_data={'BCemu': ['input_data/*.rst']},
+      package_data={'BCemu': ['input_data/*']},
       install_requires=['numpy', 'scipy', 'matplotlib', 'astropy',
                         'scikit-learn', 'smt==1.0.0', 'cython', 'wget'],
       zip_safe=False,
