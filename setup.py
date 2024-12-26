@@ -7,22 +7,23 @@ Setup script
 from setuptools import setup, find_packages
 #from distutils.core import setup
 
-BCMemu_link = 'https://github.com/sambit-giri/BCemu.git'
+BCemu_link = 'https://github.com/sambit-giri/BCemu.git'
+
+# Read requirements from requirements.txt
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
 setup(name='BCemu',
       version='1.1.2',
       description='Using emulators to implement baryonic effects.',
-      url=BCMemu_link,
+      url=BCemu_link,
       author='Sambit Giri',
       author_email='sambit.giri@gmail.com',
-      # packages=find_packages("src"),
-      # package_dir={"": "src"},
-      package_dir = {'BCemu' : 'src'},
-      packages=['BCemu'],
+      packages=find_packages("src"),
+      package_dir={"": "src"},
       package_data={'BCemu': ['input_data/*']},
-      install_requires=['numpy', 'scipy', 'matplotlib', 'astropy',
-                        'scikit-learn', 'smt==1.0.0', 'cython', 'wget'],
-      zip_safe=False,
+      install_requires=requirements,
+      # zip_safe=False,
       include_package_data=True,
       long_description=open('README.md').read(),
       long_description_content_type='text/markdown',
