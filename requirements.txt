@@ -9,3 +9,4 @@ wget
 pandas
 importlib-resources
 pytest
+nose
