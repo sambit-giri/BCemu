@@ -1,10 +1,15 @@
 # BCemu
 
+[![License](https://img.shields.io/github/license/sambit-giri/BCemu.svg)](https://github.com/sambit-giri/BCemu/blob/master/LICENSE)
+[![GitHub Repository](https://img.shields.io/github/repo-size/sambit-giri/BCemu)](https://github.com/sambit-giri/BCemu)
+![CI Status](https://github.com/sambit-giri/BCemu/actions/workflows/ci.yml/badge.svg)
+[![PyPI version](https://badge.fury.io/py/BCemu.svg)](https://badge.fury.io/py/BCemu)
+
 A Python package for modelling baryonic effects in cosmological simulations.
 
 ## Package details
 
-The package provides emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model [[1]](#1), where gravity-only *N*-body simulation results are manipulated to include the impact of baryonic feedback processes. For a detailed description, see Ref. [[2]](#2).
+The package provides emulators to model the suppression in the power spectrum due to baryonic feedback processes. These emulators are based on the baryonification model ([Schneider et al. 2019](#1)), where gravity-only *N*-body simulation results are manipulated to include the impact of baryonic feedback processes. For a detailed description, see [Giri & Schneider (2021)](#2).
 
 ## INSTALLATION
 
