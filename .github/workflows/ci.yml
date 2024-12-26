@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8]  # Test specifically with Python 3.8
+        python-version: [3.9]  # Test specifically with Python 3.9
 
     steps:
       - name: Check out repository code
@@ -47,7 +47,7 @@ jobs:
           # Activate the Conda environment and update Python
           source ~/.bashrc
           conda activate myenv
-          conda install python=3.8 --update-deps  # Specify exact Python version
+          conda install python=3.9 --update-deps  # Specify exact Python version
         shell: bash
 
       - name: Install additional dependencies
