@@ -8,3 +8,4 @@ smt==1.0.0
 wget
 pandas
 importlib-resources
+pytest
