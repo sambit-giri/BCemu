@@ -29,7 +29,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           auto-update-conda: true
           environment-file: environment.yml  # Environment configuration file
-          activate-environment: toolscosmo
+          activate-environment: myenv
 
       - name: Initialize Conda (if needed)
         run: |
