@@ -1,23 +1,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import os, pickle, pkg_resources
+import os, pickle
+# import pkg_resources
+from importlib.resources import files
 
 def galaxy_clusters_Xray_data():
     '''
     X-ray data constraining gas properties inside galaxy clusters,
-    taken from Sun et al (2009), Lovisari et al. (2015) and Gonzalez et al. (2013).
+    taken from Sun et al (2009), Lovisari et al. (2015), and Gonzalez et al. (2013).
     '''
-    # filename = 'input_data/galaxy_clusters_gas_constraints.xlsx'
-    filename = pkg_resources.resource_filename('BCemu', 'input_data/galaxy_clusters_gas_constraints.xlsx')
-    Sun2009      = pd.read_excel(filename, sheet_name='Sun2009', skiprows=0)
+    # Path to the Excel file
+    package_name = "BCemu"
+    filename = str(files(package_name) / 'input_data/galaxy_clusters_gas_constraints.xlsx')
+
+    # Load the Excel sheets into Pandas DataFrames
+    Sun2009 = pd.read_excel(filename, sheet_name='Sun2009', skiprows=0)
     Lovisari2015 = pd.read_excel(filename, sheet_name='Lovisari2015', skiprows=0)
     Gonzalez2013 = pd.read_excel(filename, sheet_name='Gonzalez2013', skiprows=0)
+
     return {
-        'Sun2009'     : Sun2009,
+        'Sun2009': Sun2009,
         'Lovisari2015': Lovisari2015,
         'Gonzalez2013': Gonzalez2013,
-        }
+    }
 
 def plot_galaxy_clusters_Xray_data(x='M500', y='fgas500', xerr='dM500', yerr='dfgas500', name='Sun2009',
                                    **kwargs):

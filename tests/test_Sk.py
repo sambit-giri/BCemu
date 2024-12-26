@@ -1,6 +1,5 @@
 import numpy as np 
-import pickle
-from BCemu import * 
+import BCemu 
 
 ### Cosmology
 Ob, Om = 0.0463, 0.2793
@@ -19,7 +18,7 @@ def test_BCM_7param():
 	'''
 	With this test, the 7 parameter baryonic power suppression is tested.
 	'''
-	bfcemu = BCM_7param(Ob=Ob, Om=Om)
+	bfcemu = BCemu.BCM_7param(Ob=Ob, Om=Om)
 	p0     = bfcemu.get_boost(0.0, bcmdict, k_eval)
 	p0p5   = bfcemu.get_boost(0.5, bcmdict, k_eval)
 	p1     = bfcemu.get_boost(1.0, bcmdict, k_eval)

@@ -5,14 +5,20 @@ Created by Sambit K. Giri
 import numpy as np
 from scipy import special
 from scipy.interpolate import splev, splrep, bisplrep, bisplev
-import os, pickle, pkg_resources
+import os, pickle
 from glob import glob
+# import pkg_resources
+from importlib.resources import files
 
-path_to_emu0_file   = pkg_resources.resource_filename('BCemu', 'input_data/kpls_emulator_z0_nComp3.pkl')
-path_to_emu0p5_file = pkg_resources.resource_filename('BCemu', 'input_data/kpls_emulator_z0p5_nComp3.pkl')
-path_to_emu1_file   = pkg_resources.resource_filename('BCemu', 'input_data/kpls_emulator_z1_nComp3.pkl')
-path_to_emu1p5_file = pkg_resources.resource_filename('BCemu', 'input_data/kpls_emulator_z1p5_nComp3.pkl')
-path_to_emu2_file   = pkg_resources.resource_filename('BCemu', 'input_data/kpls_emulator_z2_nComp3.pkl')
+# Define the package where the files are located
+package_name = "BCemu"
+
+# Get paths to the files
+path_to_emu0_file   = str(files(package_name) / 'input_data/kpls_emulator_z0_nComp3.pkl')
+path_to_emu0p5_file = str(files(package_name) / 'input_data/kpls_emulator_z0p5_nComp3.pkl')
+path_to_emu1_file   = str(files(package_name) / 'input_data/kpls_emulator_z1_nComp3.pkl')
+path_to_emu1p5_file = str(files(package_name) / 'input_data/kpls_emulator_z1p5_nComp3.pkl')
+path_to_emu2_file   = str(files(package_name) / 'input_data/kpls_emulator_z2_nComp3.pkl')
 
 ks_emulated = np.array([ 0.0341045 ,  0.05861015,  0.08348237,  0.10855948,  0.13396836,
 		        0.15800331,  0.18254227,  0.20724802,  0.23212444,  0.2567891 ,
