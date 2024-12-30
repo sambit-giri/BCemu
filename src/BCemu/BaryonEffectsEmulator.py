@@ -298,11 +298,11 @@ class BCM_3param(use_emul):
 		pp_tck = splrep(kk, pp, k=3)
 		return splev(k_eval, pp_tck, ext=0)
 	
-def get_boost_BCM_7param(z, BCM_params, k_eval, verbose=True, Ob=0.0463, Om=0.2793):
+def get_boost_BCM_7param(z, BCM_params, k_eval, Ob=0.0463, Om=0.2793, verbose=True):
 	bfcemu = BCM_7param(Ob=Ob, Om=Om, verbose=verbose)
 	return bfcemu.get_boost(z, BCM_params, k_eval)
 
-def get_boost_BCM_3param(z, BCM_params, k_eval, verbose=True, Ob=0.0463, Om=0.2793):
+def get_boost_BCM_3param(z, BCM_params, k_eval, Ob=0.0463, Om=0.2793, verbose=True):
 	if 'delta' in BCM_params.keys() or 'eta' in BCM_params.keys() or 'mu' in BCM_params.keys() or 'gamma' in BCM_params.keys():
 		print('3 parameter BCM model')
 		print('delta, mu, gamma, eta = 7.0, 1.0, 2.5, 0.2')
