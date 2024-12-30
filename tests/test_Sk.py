@@ -25,3 +25,14 @@ def test_BCM_7param():
 	p1p5   = bfcemu.get_boost(1.5, bcmdict, k_eval)
 	p2     = bfcemu.get_boost(2.0, bcmdict, k_eval)
 	assert np.abs(p0[0]-0.999129)<0.00001 and np.abs(p0p5[0]-0.998741)<0.00001 and np.abs(p1[0]-0.998928)<0.00001 and np.abs(p1p5[0]-0.999030)<0.00001 and np.abs(p2[0]-0.999575)<0.00001
+
+def test_BCM_3param():
+	'''
+	With this test, the 3 parameter baryonic power suppression is tested.
+	'''
+	p0   = BCemu.get_boost_BCM_3param(0.0, bcmdict, k_eval, verbose=True)
+	p0p5 = BCemu.get_boost_BCM_3param(0.5, bcmdict, k_eval, verbose=True)
+	p1   = BCemu.get_boost_BCM_3param(1.0, bcmdict, k_eval, verbose=True)
+	p1p5 = BCemu.get_boost_BCM_3param(1.5, bcmdict, k_eval, verbose=True)
+	p2   = BCemu.get_boost_BCM_3param(2.0, bcmdict, k_eval, verbose=True)
+	assert np.abs(p0[0]-0.999203)<0.00001 and np.abs(p0p5[0]-0.999118)<0.00001 and np.abs(p1[0]-0.999041)<0.00001 and np.abs(p1p5[0]-0.999229)<0.00001 and np.abs(p2[0]-0.999595)<0.00001

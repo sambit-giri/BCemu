@@ -269,9 +269,12 @@ class BCM_7param(use_emul):
 
 class BCM_3param(use_emul):
 	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793, verbose=True, 
-	      				below_kmin='extrapolate', above_kmax='extrapolate'):
-		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om, verbose=verbose,
-		   				below_kmin=below_kmin, above_kmax=above_kmax)
+	      				below_kmin='extrapolate', above_kmax='extrapolate',
+						above_zmax='extrapolate'):
+		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om, verbose=verbose)
+		self.below_kmin = below_kmin
+		self.above_kmax = above_kmax
+		self.above_zmax = above_zmax
 
 	def print_param_names(self):
 		print('\nBaryonification parameters:')
@@ -294,5 +297,20 @@ class BCM_3param(use_emul):
 		pp, kk = self.run(BCM_params, z=z)
 		pp_tck = splrep(kk, pp, k=3)
 		return splev(k_eval, pp_tck, ext=0)
+	
+def get_boost_BCM_7param(z, BCM_params, k_eval, verbose=True, Ob=0.0463, Om=0.2793):
+	bfcemu = BCM_7param(Ob=Ob, Om=Om, verbose=verbose)
+	return bfcemu.get_boost(z, BCM_params, k_eval)
+
+def get_boost_BCM_3param(z, BCM_params, k_eval, verbose=True, Ob=0.0463, Om=0.2793):
+	if 'delta' in BCM_params.keys() or 'eta' in BCM_params.keys() or 'mu' in BCM_params.keys() or 'gamma' in BCM_params.keys():
+		print('3 parameter BCM model')
+		print('delta, mu, gamma, eta = 7.0, 1.0, 2.5, 0.2')
+	BCM_params['delta'] = 7.0
+	BCM_params['mu']    = 1.0
+	BCM_params['gamma'] = 2.5
+	BCM_params['eta']   = 0.2
+	bfcemu = BCM_7param(Ob=Ob, Om=Om, verbose=verbose)
+	return bfcemu.get_boost(z, BCM_params, k_eval)
 
 
