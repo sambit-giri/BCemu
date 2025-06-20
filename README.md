@@ -43,6 +43,27 @@ For testing, one can use [pytest](https://docs.pytest.org/en/stable/) or [nosete
     
 	nosetests -v
 
+## 📖 Citation
+
+If you use `BCemu` in your research, please cite the following paper:
+
+> Giri, S. K., & Schneider, A. (2021). Emulation of baryonic effects on the matter power spectrum and constraints from galaxy cluster data. Journal of Cosmology and Astroparticle Physics, 2021(12), 046. 
+> [https://doi.org/10.1088/1475-7516/2021/12/046](https://doi.org/10.1088/1475-7516/2021/12/046)
+
+BibTeX entries:
+```bibtex
+@article{giri2021emulation,
+  title={Emulation of baryonic effects on the matter power spectrum and constraints from galaxy cluster data},
+  author={Giri, Sambit K and Schneider, Aurel},
+  journal={Journal of Cosmology and Astroparticle Physics},
+  volume={2021},
+  number={12},
+  pages={046},
+  year={2021},
+  publisher={IOP Publishing}
+}
+```
+
 ## USAGE
 
 Script to get the baryonic power suppression.
