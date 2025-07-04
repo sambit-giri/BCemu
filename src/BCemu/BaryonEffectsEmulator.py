@@ -145,24 +145,40 @@ class use_emul:
 		if self.verbose: print('Baryon fraction is set to {:.3f}'.format(self.fb))
 
 	def check_range(self):
+		"""
+		Assigns parameter bounds to instance attributes and checks if all
+		model parameters are within their allowed ranges.
+
+		If a parameter is found to be outside its bounds, this function will
+		raise an AssertionError that pinpoints the problematic parameter, its
+		value, and its valid range.
+		"""
+		# Define the parameter names and their bounds
+		param_names = ['log10Mc', 'mu', 'thej', 'gamma', 'delta', 'eta', 'deta', 'fb']
 		mins = [11, 0.0, 2, 1, 3,  0.05, 0.05, 0.10]
 		maxs = [15, 2.0, 8, 4, 11, 0.40, 0.40, 0.25]
-		self.mins = mins 
+
+		# Assign bounds to instance attributes for use by other methods
+		self.mins = mins
 		self.maxs = maxs
-		knob = False
-		if mins[0]<=self.log10Mc<=maxs[0] and mins[1]<=self.mu<=maxs[1] and mins[2]<=self.thej<=maxs[2] and mins[3]<=self.gamma<=maxs[3] and mins[4]<=self.delta<=maxs[4] and mins[5]<=self.eta<=maxs[5] and mins[6]<=self.deta<=maxs[6] and mins[7]<=self.fb<=maxs[7]:
-			knob = True
-		if not knob:
-			print('The parameters provided are outside the allowed range.')
-			print('log10Mc : [{},{}]'.format(self.mins[0],self.maxs[0]))
-			print('mu      : [{},{}]'.format(self.mins[1],self.maxs[1]))
-			print('thej    : [{},{}]'.format(self.mins[2],self.maxs[2]))
-			print('gamma   : [{},{}]'.format(self.mins[3],self.maxs[3]))
-			print('delta   : [{},{}]'.format(self.mins[4],self.maxs[4]))
-			print('eta     : [{},{}]'.format(self.mins[5],self.maxs[5]))
-			print('deta    : [{},{}]'.format(self.mins[6],self.maxs[6]))
-			print('fb      : [{},{}]'.format(self.mins[7],self.maxs[7]))
-		assert knob
+
+		# Create a list of the current values of the parameters
+		values = [self.log10Mc, self.mu, self.thej, self.gamma, self.delta, self.eta, self.deta, self.fb]
+
+		# Iterate and check each parameter individually
+		for name, value, min_val, max_val in zip(param_names, values, self.mins, self.maxs):
+			in_range = min_val <= value <= max_val
+			
+			# If a parameter is out of range, create a specific error message
+			# and raise an AssertionError, immediately halting execution.
+			if not in_range:
+				error_message = (
+					f"\n\n❌ Parameter '{name}' is outside its allowed range.\n"
+					f"   - Value provided: {value}\n"
+					f"   - Allowed range : [{min_val}, {max_val}]\n"
+				)
+				assert in_range, error_message
+				
 		return None
 
 	def z_evolve_param(self, z):
@@ -297,6 +313,41 @@ class BCM_3param(use_emul):
 		pp, kk = self.run(BCM_params, z=z)
 		pp_tck = splrep(kk, pp, k=3)
 		return splev(k_eval, pp_tck, ext=0)
+	
+
+class BCM_1param(use_emul):
+	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793, verbose=True, 
+	      				below_kmin='extrapolate', above_kmax='extrapolate',
+						above_zmax='extrapolate'):
+		super().__init__(emul_names=emul_names, Ob=Ob, Om=Om, verbose=verbose)
+		self.below_kmin = below_kmin
+		self.above_kmax = above_kmax
+		self.above_zmax = above_zmax
+
+	def print_param_names(self):
+		print('\nBaryonification parameters:')
+		print('--------------------------')
+		print('log10Mc\n')
+		print('Redshift evolution parameters:')
+		print('-----------------------------')
+		print('nu_Mc\n')
+	
+	def get_boost(self, z, BCM_params, k_eval, fb=None):
+		BCM_params['delta'] = 7.0
+		BCM_params['eta']   = 0.2
+		BCM_params['mu']    = 1.0
+		BCM_params['gamma'] = 2.5
+		BCM_params['thej']  = 3.5
+		BCM_params['deta']  = 0.2
+		if k_eval.min()<self.ks0.min():
+			print('k values below {:.3f} h/Mpc are errornous.'.format(self.ks0.min()))
+		if k_eval.max()>self.ks0.max():
+			print('k values above {:.3f} h/Mpc are errornous.'.format(self.ks0.max()))
+		if fb is not None: self.fb = fb
+		pp, kk = self.run(BCM_params, z=z)
+		pp_tck = splrep(kk, pp, k=3)
+		return splev(k_eval, pp_tck, ext=0)
+	
 	
 def get_boost_BCM_7param(z, BCM_params, k_eval, Ob=0.0463, Om=0.2793, verbose=True):
 	bfcemu = BCM_7param(Ob=Ob, Om=Om, verbose=verbose)
