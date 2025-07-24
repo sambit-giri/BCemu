@@ -4,3 +4,4 @@ dist/*
 *.egg-info 
 src/*.egg-info 
 src/BCemu/input_data/kpls_emulator_z*
+work_dir
