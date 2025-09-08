@@ -7,7 +7,12 @@ scikit-learn
 smt==1.0.0
 wget
 pandas
-importlib-resources
+tqdm
 pytest
 nose
-torch
+# torch
+# joblib
+# onnxruntime
+# onnx
+jax 
+flax

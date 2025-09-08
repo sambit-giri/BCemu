@@ -1,122 +1,85 @@
-import numpy as np 
+import numpy as np
 import pickle
-from BCemu import * 
-
-### Cosmology
-Ob, Om = 0.0463, 0.2793
-bfcemu = BCemu2025()
-
-bcmdict = {'log10Mc': 13.32,
-		   'mu'     : 0.93,
-		   'thej'   : 4.235,  
-		   'gamma'  : 2.25,
-		   'delta'  : 6.40,
-		   'eta'    : 0.15,
-		   'deta'   : 0.14,
-		   }
-k_eval = 10**np.linspace(-1,1.08,50)
-p0     = bfcemu.get_boost(0.0, bcmdict, k_eval)
-p0p5   = bfcemu.get_boost(0.5, bcmdict, k_eval)
-p1     = bfcemu.get_boost(1.0, bcmdict, k_eval)
-p1p5   = bfcemu.get_boost(1.5, bcmdict, k_eval)
-p2     = bfcemu.get_boost(2.0, bcmdict, k_eval)
-
-# Read the BAHAMAS data
-BAH = pickle.load(open('BAHAMAS_data.pkl', 'rb'))
-
-# Plot
-
+import BCemu
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
+
+# --- 1. Initialize the Emulator ---
+bfcemu = BCemu.BCemu2025()
+
+# --- 2. Define Baryonic and Cosmological Parameters ---
+# These are the 8 parameters the emulator expects.
+Ob, Om = 0.0463, 0.2793
+bcmdict = {
+    'Theta_co': 0.3,
+    'log10Mc': 13.1,
+    'mu': 1.0,
+    'delta': 6.0,
+    'eta': 0.08,
+    'deta': 0.23,
+    'Nstar': 0.025,
+    'fb': Ob / Om,
+}
+
+# The new emulator is also a function of the quenching parameter q2.
+# We will use a typical value for this example.
+q2_val = 0.70 
+
+# Define the k-values where we want to evaluate the suppression for our plot
+k_eval = 10**np.linspace(-1, 1.08, 100)
+
+# --- 3. Get Emulated Predictions ---
+# We call the emulator for each redshift and then interpolate the result
+# onto our desired k_eval grid.
+
+print("\nRunning emulator predictions...")
+predictions = {}
+for z_val in [0.0, 0.5, 1.0, 1.5, 2.0]:
+    # The get_boost function returns the emulator's k-grid and the S(k) on that grid
+    k_emu, Sk_emu = bfcemu.get_boost(bcmdict, z=z_val, q2=q2_val)
+    
+    # We interpolate the result onto our specific k_eval grid for plotting
+    p_interp = np.interp(k_eval, k_emu, Sk_emu)
+    predictions[z_val] = p_interp
+    print(f"  - Prediction for z={z_val} complete.")
+
+# --- 4. Read the BAHAMAS data for comparison ---
+try:
+    BAH = pickle.load(open('BAHAMAS_data.pkl', 'rb'))
+except FileNotFoundError:
+    print("\nWarning: 'BAHAMAS_data.pkl' not found. Plot will only show emulated results.")
+    BAH = None
+
+# --- 5. Plot the Results ---
 rcParams['font.family'] = 'sans-serif'
 rcParams['axes.labelsize']  = 20
 rcParams['font.size']       = 20 
 rcParams['axes.linewidth']  = 1.6
 
-plt.figure(figsize=(15,9))
+plt.figure(figsize=(15, 9))
 
-ax1 = plt.subplot2grid(shape=(2,6), loc=(0,0), colspan=2)
-ax2 = plt.subplot2grid((2,6), (0,2), colspan=2)
-ax3 = plt.subplot2grid((2,6), (0,4), colspan=2)
-ax4 = plt.subplot2grid((2,6), (1,1), colspan=2)
-ax5 = plt.subplot2grid((2,6), (1,3), colspan=2)
+axes_map = {
+    0.0: plt.subplot2grid((2, 6), (0, 0), colspan=2),
+    0.5: plt.subplot2grid((2, 6), (0, 2), colspan=2),
+    1.0: plt.subplot2grid((2, 6), (0, 4), colspan=2),
+    1.5: plt.subplot2grid((2, 6), (1, 1), colspan=2),
+    2.0: plt.subplot2grid((2, 6), (1, 3), colspan=2),
+}
 
-ax1.set_title('$z=0$')
-ax1.semilogx(BAH['z=0']['k'], BAH['z=0']['S'], '-', c='C0', lw=5, alpha=0.2, label='BAHAMAS')
-ax1.semilogx(k_eval, p0, '--', c='b', lw=3, label='Emulated')
+for z, ax in axes_map.items():
+    ax.set_title(f'$z={z}$')
+    
+    if BAH and f'z={int(z) if z%1==0 else z}' in BAH:
+        ax.semilogx(BAH[f'z={int(z) if z%1==0 else z}']['k'], BAH[f'z={int(z) if z%1==0 else z}']['S'], '-', c='C0', lw=5, alpha=0.2, label='BAHAMAS')
 
-ax1.set_xlim(0.09,12)
-ax1.set_ylim(0.7,1.08)
-ax1.legend()
-ax1.set_xlabel('$k$ ($h$ Mpc)')
-ax1.set_ylabel('$\mathcal{S}(k)$')
+    ax.semilogx(k_eval, predictions[z], '--', c='b', lw=3, label='Emulated')
 
-ax2.set_title('$z=0.5$')
-ax2.semilogx(BAH['z=0.5']['k'], BAH['z=0.5']['S'], '-', c='C0', lw=5, alpha=0.2)
-ax2.semilogx(k_eval, p0p5, '--', c='b', lw=3, label='Emulated')
+    ax.set_xlim(0.09, 12)
+    ax.set_ylim(0.7, 1.08)
+    ax.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
+    ax.set_ylabel('$\mathcal{S}(k)$')
 
-ax2.set_xlim(0.09,12)
-ax2.set_ylim(0.7,1.08)
-#ax2.legend()
-ax2.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
-ax2.set_ylabel('$\mathcal{S}(k)$')
+axes_map[0.0].legend()
 
-ax3.set_title('$z=1$')
-ax3.semilogx(BAH['z=1']['k'], BAH['z=1']['S'], '-', c='C0', lw=5, alpha=0.2)
-ax3.semilogx(k_eval, p1, '--', c='b', lw=3, label='Emulated')
-
-ax3.set_xlim(0.09,12)
-ax3.set_ylim(0.7,1.08)
-#ax3.set_legend()
-ax3.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
-ax3.set_ylabel('$\mathcal{S}(k)$')
-
-ax4.set_title('$z=1.5$')
-ax4.semilogx(BAH['z=1.5']['k'], BAH['z=1.5']['S'], '-', c='C0', lw=5, alpha=0.2)
-ax4.semilogx(k_eval, p1p5, '--', c='b', lw=3, label='Emulated')
-
-ax4.set_xlim(0.09,12)
-ax4.set_ylim(0.7,1.08)
-#ax4.legend()
-ax4.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
-ax4.set_ylabel('$\mathcal{S}(k)$')
-
-ax5.set_title('$z=2$')
-ax5.semilogx(BAH['z=2']['k'], BAH['z=2']['S'], '-', c='C0', lw=5, alpha=0.2)
-ax5.semilogx(k_eval, p2, '--', c='b', lw=3, label='Emulated')
-
-ax5.set_xlim(0.09,12)
-ax5.set_ylim(0.7,1.08)
-#ax5.legend()
-ax5.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
-ax5.set_ylabel('$\mathcal{S}(k)$')
-
-# plt.tight_layout()
-# plt.show()
-
-
-
-bcmdict = {'log10Mc': 13.32,
-		   'mu'     : 0.93,
-		   'thej'   : 4.235,  
-		   'gamma'  : 2.25,
-		   'delta'  : 6.40,
-		   'eta'    : 0.15,
-		   'deta'   : 0.14,
-		   'nu_Mc'  : 0.05,
-		   }
-k_eval = 10**np.linspace(-1,1.08,50)
-p0     = bfcemu.get_boost(0.0, bcmdict, k_eval)
-p0p5   = bfcemu.get_boost(0.5, bcmdict, k_eval)
-p1     = bfcemu.get_boost(1.0, bcmdict, k_eval)
-p1p5   = bfcemu.get_boost(1.5, bcmdict, k_eval)
-p2     = bfcemu.get_boost(2.0, bcmdict, k_eval)
-
-
-ax1.semilogx(k_eval, p0, '-.', c='g', lw=3, label='Emulated')
-ax2.semilogx(k_eval, p0p5, '-.', c='g', lw=3, label='Emulated')
-ax3.semilogx(k_eval, p1, '-.', c='g', lw=3, label='Emulated')
-ax4.semilogx(k_eval, p1p5, '-.', c='g', lw=3, label='Emulated')
-ax5.semilogx(k_eval, p2, '-.', c='g', lw=3, label='Emulated')
 plt.tight_layout()
 plt.show()
