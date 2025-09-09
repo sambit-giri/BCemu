@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
 # --- 1. Initialize the Emulator ---
-bfcemu = BCemu.BCemu2025()
+bfcemu = BCemu.BCemu2025(differentiable=True)
 
 # --- 2. Define Baryonic and Cosmological Parameters ---
 # These are the 8 parameters the emulator expects.
-Ob, Om = 0.0463, 0.2793
+Ob, Om = 0.0486, 0.306
 bcmdict = {
     'Theta_co': 0.3,
     'log10Mc': 13.1,
