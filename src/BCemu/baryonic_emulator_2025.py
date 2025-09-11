@@ -66,6 +66,7 @@ class BCemu2025:
         self.param_names = meta['param_names']
         self.z_grid = np.array(meta['z_grid'])
         self.q2_grid = np.array(meta['q2_grid'])
+        self.cosmology = meta['cosmology']
         
         # Load the single, unified architecture from the metadata
         arch = meta['architecture']
