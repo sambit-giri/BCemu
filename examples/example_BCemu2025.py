@@ -149,7 +149,7 @@ k_idx = np.argmin(np.abs(k_eval - k_specific))
 
 print(f"\nDerivatives at k = {k_specific} h/Mpc:")
 for i, param_name in enumerate(bfcemu.param_names):
-    param_derivative = np.array(derivatives[i])
+    param_derivative = np.array(derivatives[:,i])
     k_emu_np = np.array(k_emu)
     deriv_interp = np.interp(k_eval, k_emu_np, param_derivative)
     deriv_at_k = deriv_interp[k_idx]
