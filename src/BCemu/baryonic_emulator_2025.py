@@ -31,21 +31,10 @@ class FlaxBCemuNet(nn.Module):
 class BCemu2025:
     """
     A JAX-based class that loads natively-trained Flax models for fast, 
-    version-agnostic, and optionally differentiable inference.
+    version-agnostic, and optionally differentiable inference. This version
+    assumes a single, unified architecture for all emulator grid points.
     """
     def __init__(self, model_dir=None, differentiable=False):
-        """
-        Initializes the BCemu2025 object by loading JAX-native models.
-
-        Args:
-            model_dir (str, optional): Path to the directory containing emulator files.
-                If None, it uses the default package location and downloads if necessary.
-            differentiable (bool, optional): If True, the differentiable method
-                `get_boost_differentiable` will be Just-In-Time (JIT) compiled
-                during initialization. This adds to the startup time but makes
-                subsequent calls to the differentiable function extremely fast.
-                Defaults to False.
-        """
         if model_dir is None:
             package_name = "BCemu"
             data_dir_name = "input_data"
@@ -77,26 +66,35 @@ class BCemu2025:
         self.param_names = meta['param_names']
         self.z_grid = np.array(meta['z_grid'])
         self.q2_grid = np.array(meta['q2_grid'])
-        self.emulators = {}
+        
+        # Load the single, unified architecture from the metadata
+        arch = meta['architecture']
+        self.flax_model = FlaxBCemuNet(
+            n_output_pca=arch['n_output_pca'],
+            hidden_layers=arch['hidden_layers']
+        )
+        self.n_input_features = arch['n_input']
 
-        print("Loading BCemu2025 JAX models...")
+        self.emulators = {}
+        print("Loading BCemu2025 JAX models with unified architecture...")
         grid_points = [(z, q2) for z in self.z_grid for q2 in self.q2_grid]
-        for z, q2 in tqdm(grid_points, desc="Compiling individual models"):
+        
+        # JIT compile the model's apply function once, as the architecture is the same for all
+        jit_apply = jax.jit(self.flax_model.apply)
+
+        for z, q2 in tqdm(grid_points, desc="Loading model weights"):
             key = (z, q2)
             model_path = os.path.join(self.model_dir, f'BCemu2025_emulator_z{z:.2f}_q2_{q2:.2f}.msgpack')
-            arch_path = os.path.join(self.model_dir, f'BCemu2025_arch_z{z:.2f}_q2_{q2:.2f}.json')
             transform_path = os.path.join(self.model_dir, f'BCemu2025_transforms_z{z:.2f}_q2_{q2:.2f}.npz')
 
-            with open(arch_path, 'r') as f: arch = json.load(f)
-            flax_model = FlaxBCemuNet(n_output_pca=arch['n_output_pca'], hidden_layers=arch['hidden_layers'])
-            
             with open(model_path, 'rb') as f:
-                dummy_params = flax_model.init(jax.random.PRNGKey(0), jnp.ones((1, arch['n_input'])))['params']
+                # Initialize with a dummy key, then load the actual params
+                dummy_params = self.flax_model.init(jax.random.PRNGKey(0), jnp.ones((1, self.n_input_features)))['params']
                 loaded_params = from_bytes(dummy_params, f.read())
 
             transforms = np.load(transform_path)
             self.emulators[key] = {
-                'apply_fn': flax_model.apply,
+                'apply_fn': jit_apply, # Use the same JIT'd function for all
                 'params': loaded_params,
                 'scaler_mean': jnp.array(transforms['scaler_mean']),
                 'scaler_scale': jnp.array(transforms['scaler_scale']),
@@ -104,7 +102,6 @@ class BCemu2025:
                 'pca_components': jnp.array(transforms['pca_components'])
             }
         
-        # --- Optionally pre-compile the differentiable function for performance ---
         self.get_boost_differentiable = None
         if differentiable:
             print("JIT compiling the differentiable boost function...")
@@ -114,23 +111,15 @@ class BCemu2025:
         print("...BCemu2025 emulator is ready.")
 
     def _get_reconstructed_Sk_numpy(self, params_np, z, q2):
-        """Internal method for on-grid prediction using NumPy (non-differentiable)."""
         key = (z, q2)
         components = self.emulators[key]
-        
         scaled_params = (params_np - np.array(components['scaler_mean'])) / np.array(components['scaler_scale'])
-        
         pca_amplitudes_jax = components['apply_fn']({'params': components['params']}, jnp.array(scaled_params))
         pca_amplitudes = np.array(pca_amplitudes_jax)
-        
         reconstructed_sk = np.dot(pca_amplitudes, np.array(components['pca_components'])) + np.array(components['pca_mean'])
-        
         return reconstructed_sk.flatten()
 
     def get_boost(self, bcmdict, z, q2=0.70):
-        """
-        Calculates S(k) using NumPy/SciPy for fast, non-differentiable inference.
-        """
         from scipy.interpolate import interp1d
         params_np = np.array([[bcmdict[key] for key in self.param_names]])
 
@@ -156,22 +145,6 @@ class BCemu2025:
         return self.k, S_final.flatten()
 
     def _get_boost_differentiable(self, params_jnp, z, q2=0.70):
-        """
-        Calculates the baryonic suppression S(k) using only JAX operations.
-        This pure function is designed to be JIT-compiled for performance and
-        is fully differentiable with respect to its inputs.
-
-        Args:
-            params_jnp (jax.numpy.ndarray): A JAX array of baryonic parameters
-                with shape (1, n_params) or (n_params,). The order must match
-                the internal `self.param_names` list.
-            z (float): The redshift at which to calculate the suppression.
-            q2 (float, optional): The integrated quenching value. Defaults to 0.70.
-
-        Returns:
-            jax.numpy.ndarray: The predicted baryonic suppression S(k), a JAX
-                               array of shape (n_k_bins,).
-        """
         def _get_reconstructed_Sk_jax(p_jnp, z_val, q2_val):
             components = self.emulators[(z_val, q2_val)]
             scaled_p = (p_jnp - components['scaler_mean']) / components['scaler_scale']
@@ -196,7 +169,6 @@ class BCemu2025:
         S_z2 = (1 - w_q2) * S21 + w_q2 * S22
         S_final = (1 - w_z) * S_z1 + w_z * S_z2
         
-        # Handle cases where z or q2 are on the grid to avoid NaN gradients
         S_final = jnp.where(z1 == z2, S_z1, S_final)
         S_final = jnp.where(q2_1 == q2_2, (1 - w_z) * S11 + w_z * S21, S_final)
         

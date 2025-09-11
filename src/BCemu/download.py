@@ -145,7 +145,7 @@ def download_emulators(model_name='BCemu2021', force_download=False):
                 print(f'Processing z={z:.2f}, q2={q2:.2f}:')
                 # Updated filenames for the JAX-native, version-agnostic format
                 filenames = [
-                    f'BCemu2025_arch_z{z:.2f}_q2_{q2:.2f}.json',
+                    # f'BCemu2025_arch_z{z:.2f}_q2_{q2:.2f}.json',
                     f'BCemu2025_emulator_z{z:.2f}_q2_{q2:.2f}.msgpack',
                     f'BCemu2025_transforms_z{z:.2f}_q2_{q2:.2f}.npz'
                 ]
