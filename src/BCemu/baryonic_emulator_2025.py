@@ -66,8 +66,11 @@ class BCemu2025:
         self.param_names = meta['param_names']
         self.z_grid = np.array(meta['z_grid'])
         self.q2_grid = np.array(meta['q2_grid'])
+        # Convert grids to JAX arrays for differentiable operations
+        self.z_grid_jax = jnp.array(self.z_grid)
+        self.q2_grid_jax = jnp.array(self.q2_grid)
         self.cosmology = meta['cosmology']
-        
+
         # Load the single, unified architecture from the metadata
         arch = meta['architecture']
         self.flax_model = FlaxBCemuNet(
@@ -146,23 +149,53 @@ class BCemu2025:
         return self.k, S_final.flatten()
 
     def _get_boost_differentiable(self, params_jnp, z, q2=0.70):
-        def _get_reconstructed_Sk_jax(p_jnp, z_val, q2_val):
-            components = self.emulators[(z_val, q2_val)]
-            scaled_p = (p_jnp - components['scaler_mean']) / components['scaler_scale']
-            amplitudes = components['apply_fn']({'params': components['params']}, scaled_p)
-            return jnp.dot(amplitudes, components['pca_components']) + components['pca_mean']
-
-        z_idx = jnp.searchsorted(self.z_grid, z)
-        z1, z2 = self.z_grid[jnp.maximum(0, z_idx - 1)], self.z_grid[jnp.minimum(len(self.z_grid)-1, z_idx)]
+        # Pre-compute all possible emulator evaluations and use JAX select operations
+        # to choose the right ones based on grid indices
         
-        q2_idx = jnp.searchsorted(self.q2_grid, q2)
-        q2_1, q2_2 = self.q2_grid[jnp.maximum(0, q2_idx - 1)], self.q2_grid[jnp.minimum(len(self.q2_grid)-1, q2_idx)]
+        # Find grid indices
+        z_idx = jnp.searchsorted(self.z_grid_jax, z)
+        z_idx_low = jnp.maximum(0, z_idx - 1)
+        z_idx_high = jnp.minimum(len(self.z_grid_jax) - 1, z_idx)
+        
+        q2_idx = jnp.searchsorted(self.q2_grid_jax, q2)
+        q2_idx_low = jnp.maximum(0, q2_idx - 1)
+        q2_idx_high = jnp.minimum(len(self.q2_grid_jax) - 1, q2_idx)
+        
+        # Get actual grid values
+        z1, z2 = self.z_grid_jax[z_idx_low], self.z_grid_jax[z_idx_high]
+        q2_1, q2_2 = self.q2_grid_jax[q2_idx_low], self.q2_grid_jax[q2_idx_high]
+        
+        # Pre-compute all emulator evaluations for the 4 corner points
+        # We'll stack them and use JAX operations to select the right ones
+        all_S = []
+        grid_keys = []
+        
+        # Create a mapping from grid indices to emulator results
+        for i, z_val in enumerate(self.z_grid):
+            for j, q2_val in enumerate(self.q2_grid):
+                key = (z_val, q2_val)
+                components = self.emulators[key]
+                scaled_p = (params_jnp - components['scaler_mean']) / components['scaler_scale']
+                amplitudes = components['apply_fn']({'params': components['params']}, scaled_p)
+                S_result = jnp.dot(amplitudes, components['pca_components']) + components['pca_mean']
+                all_S.append(S_result.flatten())
+                grid_keys.append((i, j))
+        
+        # Stack all results
+        all_S = jnp.stack(all_S, axis=0)
+        
+        # Create selection masks for the 4 corner points
+        def get_S_at_indices(z_idx, q2_idx):
+            # Find the linear index in our stacked array
+            linear_idx = z_idx * len(self.q2_grid) + q2_idx
+            return all_S[linear_idx]
+        
+        S11 = get_S_at_indices(z_idx_low, q2_idx_low)
+        S12 = get_S_at_indices(z_idx_low, q2_idx_high)
+        S21 = get_S_at_indices(z_idx_high, q2_idx_low)
+        S22 = get_S_at_indices(z_idx_high, q2_idx_high)
 
-        S11 = _get_reconstructed_Sk_jax(params_jnp, z1.item(), q2_1.item())
-        S12 = _get_reconstructed_Sk_jax(params_jnp, z1.item(), q2_2.item())
-        S21 = _get_reconstructed_Sk_jax(params_jnp, z2.item(), q2_1.item())
-        S22 = _get_reconstructed_Sk_jax(params_jnp, z2.item(), q2_2.item())
-
+        # Perform bilinear interpolation
         w_z = (z - z1) / jnp.maximum(1e-9, z2 - z1)
         w_q2 = (q2 - q2_1) / jnp.maximum(1e-9, q2_2 - q2_1)
         
@@ -170,7 +203,8 @@ class BCemu2025:
         S_z2 = (1 - w_q2) * S21 + w_q2 * S22
         S_final = (1 - w_z) * S_z1 + w_z * S_z2
         
+        # Handle edge cases where no interpolation is needed
         S_final = jnp.where(z1 == z2, S_z1, S_final)
         S_final = jnp.where(q2_1 == q2_2, (1 - w_z) * S11 + w_z * S21, S_final)
         
-        return S_final.flatten()
+        return S_final
