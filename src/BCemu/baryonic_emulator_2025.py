@@ -122,6 +122,46 @@ class BCemu2025:
         pca_amplitudes = np.array(pca_amplitudes_jax)
         reconstructed_sk = np.dot(pca_amplitudes, np.array(components['pca_components'])) + np.array(components['pca_mean'])
         return reconstructed_sk.flatten()
+    
+    def bcm_param_info(self):
+        """
+        Defines, displays, and returns the fixed and fiducial free parameters
+        for the baryonification model.
+        """
+        print("--- Baryonification Model Parameters ---")
+
+        fixed_params = {
+            'ciga': 0.1,
+            'gamma': 1.5,
+            'Mhalo_min': 2.5e11,
+            'eps1': 0.5,
+            'halo_excl': 0.4,
+            'q1': 0.25,
+        }
+
+        free_params_fiducial = {
+            'Theta_co': 0.3,
+            'log10Mc': 13.1,
+            'mu': 1.0,
+            'delta': 6.0,
+            'eta': 0.10,
+            'deta': 0.22,
+            'Nstar': 0.028,
+            'fb': 0.0486 / 0.306,
+        }
+
+        # Helper function to create a clean, formatted string from a dictionary
+        def format_params(params_dict):
+            # Use a list comprehension and the .join() method for a clean, efficient string
+            # The '.3g' format automatically handles scientific notation for large numbers
+            items = [f"{name}={value:.3g}" for name, value in params_dict.items()]
+            return ", ".join(items)
+
+        print(f"Fixed parameters: {format_params(fixed_params)}")
+        print(f"Fiducial free parameters: {format_params(free_params_fiducial)}")
+
+        # Return both dictionaries for potential use elsewhere
+        return fixed_params, free_params_fiducial
 
     def get_boost(self, bcmdict, z, q2=0.70):
         from scipy.interpolate import interp1d

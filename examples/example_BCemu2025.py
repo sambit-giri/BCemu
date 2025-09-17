@@ -17,9 +17,9 @@ bcmdict = {
     'log10Mc': 13.1,
     'mu': 1.0,
     'delta': 6.0,
-    'eta': 0.08,
-    'deta': 0.23,
-    'Nstar': 0.025,
+    'eta': 0.10,
+    'deta': 0.22,
+    'Nstar': 0.028,
     'fb': Ob / Om,
 }
 bcmdict_jnp = jnp.array([bcmdict[key] for key in bfcemu.param_names])
