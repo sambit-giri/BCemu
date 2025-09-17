@@ -34,7 +34,7 @@ class BCemu2025:
     version-agnostic, and optionally differentiable inference. This version
     assumes a single, unified architecture for all emulator grid points.
     """
-    def __init__(self, model_dir=None, differentiable=False):
+    def __init__(self, model_dir=None, differentiable=True):
         if model_dir is None:
             package_name = "BCemu"
             data_dir_name = "input_data"
