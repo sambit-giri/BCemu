@@ -7,8 +7,8 @@ from scipy import special
 from scipy.interpolate import splev, splrep, bisplrep, bisplev
 import os, pickle
 from glob import glob
-# import pkg_resources
-# from importlib.resources import files
+import smt
+
 from .download import get_package_resource_path
 
 # Define the package where the files are located

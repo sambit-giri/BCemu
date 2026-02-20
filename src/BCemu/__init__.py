@@ -16,13 +16,11 @@ except importlib.metadata.PackageNotFoundError:
     # This happens if the user just cloned the repo and imported the folder
     # without running `pip install .` or `pip install -e .`
     __version__ = "unknown"
-    
+
 from .BaryonEffectsEmulator import *
 from . import download
 # from . import kpls 
 from .datasets import *
-import smt
-
 
 #Suppress warnings from zero-divisions and nans
 import numpy
