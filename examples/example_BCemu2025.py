@@ -91,8 +91,8 @@ for z, ax in axes_map.items():
     ax.semilogx(k_eval, predictions[z], '--', c='b', lw=3, label='Emulated')
     ax.set_xlim(0.09, 12)
     ax.set_ylim(0.7, 1.08)
-    ax.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
-    ax.set_ylabel('$\mathcal{S}(k)$')
+    ax.set_xlabel(r'$k$ ($h$ Mpc$^{-1}$)')
+    ax.set_ylabel(r'$\mathcal{S}(k)$')
 
 axes_map[0.0].legend()
 plt.suptitle('Baryonic Boost Predictions', fontsize=24, y=0.98)
@@ -116,10 +116,10 @@ for i, param_name in enumerate(bfcemu.param_names):
     deriv_interp = np.interp(k_eval, k_emu, param_derivative)
     
     ax.semilogx(k_eval, deriv_interp, '-', color=colors[i], lw=3, 
-                label=f'd$\mathcal{{S}}$/d{param_name}')
-    ax.set_xlabel('$k$ ($h$ Mpc$^{-1}$)')
-    ax.set_ylabel(f'd$\mathcal{{S}}$/d{param_name}')
-    ax.set_title(f'Derivative w.r.t. {param_name}')
+                label=rf'd$\mathcal{{S}}$/d({param_name})')
+    ax.set_xlabel(r'$k$ ($h$ Mpc$^{-1}$)')
+    ax.set_ylabel(rf'd$\mathcal{{S}}$/d({param_name})')
+    ax.set_title(rf'Derivative w.r.t. {param_name}')
     ax.grid(True, alpha=0.3)
     ax.set_xlim(0.09, 12)
     
@@ -141,7 +141,7 @@ for i, param_name in enumerate(bfcemu.param_names):
     param_derivative = derivatives[:,i]
     deriv_interp = np.interp(k_eval, k_emu, param_derivative)
     max_abs_deriv = np.max(np.abs(deriv_interp))
-    print(f"  {param_name}: max |dS/d{param_name}| = {max_abs_deriv:.4f}")
+    print(f"  {param_name}: max |dS/d({param_name})| = {max_abs_deriv:.4f}")
 
 # --- 8. Optional: Show parameter sensitivity at a specific k-value ---
 k_specific = 1.0  # h/Mpc
@@ -153,6 +153,6 @@ for i, param_name in enumerate(bfcemu.param_names):
     k_emu_np = np.array(k_emu)
     deriv_interp = np.interp(k_eval, k_emu_np, param_derivative)
     deriv_at_k = deriv_interp[k_idx]
-    print(f"  d$\mathcal{{S}}$/d{param_name} = {deriv_at_k:.6f}")
+    print(rf"  d$\mathcal{{S}}$/d({param_name}) = {deriv_at_k:.6f}")
 
 print("\nAnalysis complete!")

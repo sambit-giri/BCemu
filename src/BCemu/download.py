@@ -122,7 +122,8 @@ def download_emulators(model_name='BCemu2021', force_download=False):
 
     elif model_name.lower() == 'bcemu2025':
         print('Target directory:', path_to_emul_folder)
-        parent_url = 'https://ttt.astro.su.se/~sgiri/data/BCemu_models/trained_emulators/'
+        # parent_url = 'https://ttt.astro.su.se/~sgiri/data/BCemu_models/trained_emulators/'
+        parent_url = 'https://github.com/sambit-giri/BCemu/releases/download/v2.0.1/'
         
         # Metadata
         print('\n----- Metadata -----')
