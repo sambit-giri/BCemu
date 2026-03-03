@@ -14,7 +14,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(name='BCemu',
-      version='2.0.1',
+      version='2.0.2',
       description='Using emulators to implement baryonic effects.',
       url=BCemu_link,
       author='Sambit Giri',
