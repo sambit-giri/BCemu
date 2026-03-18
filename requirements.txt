@@ -4,7 +4,8 @@ scipy
 matplotlib
 astropy
 scikit-learn
-smt==1.0.0
+# optional — only needed for the BCemu2021 emulator (BCM_7param / BCM_3param):
+# pip install smt==1.0.0
 wget
 pandas
 tqdm

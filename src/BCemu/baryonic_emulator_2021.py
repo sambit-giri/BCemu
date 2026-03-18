@@ -7,7 +7,12 @@ from scipy import special
 from scipy.interpolate import splev, splrep, bisplrep, bisplev
 import os, pickle
 from glob import glob
-import smt
+_SMT_AVAILABLE = False
+try:
+    import smt
+    _SMT_AVAILABLE = True
+except ImportError:
+    pass
 
 from .download import get_package_resource_path
 
@@ -112,6 +117,11 @@ def clip_range(x, mn, mx, message=None):
 
 class use_emul:
 	def __init__(self, emul_names=None, Ob=0.0463, Om=0.2793, verbose=True):
+		if not _SMT_AVAILABLE:
+			raise ImportError(
+				"The 'smt' package is required for the BCemu2021 emulator.\n"
+				"Install it with:  pip install smt==1.0.0"
+			)
 		if emul_names is None:
 			emul_names = {'0'  : path_to_emu0_file, 
 						  '0.5': path_to_emu0p5_file,

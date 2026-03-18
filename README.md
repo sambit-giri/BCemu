@@ -33,7 +33,19 @@ One can also install it using pip by running the following command::
 
     pip install git+https://github.com/sambit-giri/BCemu.git
 
-The dependencies should be installed automatically during the installation process. If they fail, you can install them manually before installing BCemu. The list of required packages can be found in the requirements.txt file in the root directory.
+The core dependencies are installed automatically. Some features require optional packages:
+
+- **BCemu2025 — differentiable backends** (default is `numpy`, no extra install needed):
+  ```
+  pip install jax flax     # for backend='jax'  (CPU/GPU/TPU, differentiable via jax.grad)
+  pip install torch        # for backend='torch' (differentiable via autograd)
+  ```
+
+- **BCemu2021 emulators** (`BCM_7param` / `BCM_3param`):
+  ```
+  pip install smt==1.0.0
+  ```
+  A clear error message is shown if you try to use these emulators without `smt` installed.
 
 ### Tests
 
@@ -76,10 +88,55 @@ BibTeX entries:
 
 ## USAGE
 
-Script to get the baryonic power suppression.
+### BCemu2025
+
+The 2025 emulator covers 8 BCM parameters, redshifts up to z = 3, and supports differentiable inference. The default backend is `numpy` (no extra packages required). Install `jax`+`flax` or `torch` to use differentiable backends.
 
 ```python
-import numpy as np 
+import numpy as np
+import BCemu
+
+# Default numpy backend — fast, no extra dependencies
+bfcemu = BCemu.BCemu2025()
+
+Ob, Om = 0.0486, 0.306
+bcmdict = {
+    'Theta_co': 0.3,
+    'log10Mc':  13.1,
+    'mu':       1.0,
+    'delta':    6.0,
+    'eta':      0.10,
+    'deta':     0.22,
+    'Nstar':    0.028,
+    'fb':       Ob / Om,
+}
+
+k, S = bfcemu.get_boost(bcmdict, z=0.5)
+```
+
+**Differentiable usage** (requires `jax`+`flax`):
+
+```python
+import jax
+import jax.numpy as jnp
+import BCemu
+
+bfcemu = BCemu.BCemu2025(backend='jax')
+params = jnp.array([bcmdict[k] for k in bfcemu.param_names])
+
+# Forward pass
+S = bfcemu.get_boost_differentiable(params, z=0.5)
+
+# Full Jacobian ∂S/∂θ
+J = jax.jacfwd(bfcemu.get_boost_differentiable)(params, z=0.5)
+```
+
+### BCemu2021
+
+Requires `smt==1.0.0` (`pip install smt==1.0.0`). Script to get the baryonic power suppression.
+
+```python
+import numpy as np
 import matplotlib.pyplot as plt
 import BCemu
 
