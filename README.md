@@ -37,11 +37,21 @@ The dependencies should be installed automatically during the installation proce
 
 ### Tests
 
-For testing, one can use [pytest](https://docs.pytest.org/en/stable/) or [nosetests](https://nose.readthedocs.io/en/latest/). Both packages can be installed using pip. To run all the test script, run either of the following::
+For testing, use [pytest](https://docs.pytest.org/en/stable/), which can be installed via pip. Tests are split by emulator version so you only download what you need:
+
+| Test file | Marker | What it tests |
+|-----------|--------|---------------|
+| `tests/test_BCemu2021.py` | `bcemu2021` | BCM 7-param and 3-param emulators (BCemu2021) |
+| `tests/test_BCemu2025.py` | `bcemu2025` | JAX, numpy, and torch backends (BCemu2025) |
+
+Run all tests:
 
     python -m pytest tests
-    
-	nosetests -v
+
+Run tests for one emulator only (avoids downloading the other):
+
+    python -m pytest tests -m bcemu2021
+    python -m pytest tests -m bcemu2025
 
 ## 📖 Citation
 

@@ -7,10 +7,9 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
 # --- 1. Initialize the Emulator ---
-bfcemu = BCemu.BCemu2025(differentiable=True)
+bfcemu = BCemu.BCemu2025(backend='jax')
 
 # --- 2. Define Baryonic and Cosmological Parameters ---
-# These are the 8 parameters the emulator expects.
 Ob, Om = 0.0486, 0.306
 bcmdict = {
     'Theta_co': 0.3,
@@ -24,135 +23,169 @@ bcmdict = {
 }
 bcmdict_jnp = jnp.array([bcmdict[key] for key in bfcemu.param_names])
 
-# The new emulator is also a function of the quenching parameter q2.
-# We will use a typical value for this example.
 q2_val = 0.70
+k_eval = 10**np.linspace(-1, 1.08, 200)
 
-# Define the k-values where we want to evaluate the suppression for our plot
-k_eval = 10**np.linspace(-1, 1.08, 100)
+# LaTeX labels for each BCM parameter
+PARAM_LATEX = {
+    'Theta_co': r'$\Theta_{\rm co}$',
+    'log10Mc':  r'$\log_{10}M_c$',
+    'mu':       r'$\mu$',
+    'delta':    r'$\delta$',
+    'eta':      r'$\eta$',
+    'deta':     r'$\Delta\eta$',
+    'Nstar':    r'$N_\star$',
+    'fb':       r'$f_b$',
+}
 
 # --- 3. Get Emulated Predictions ---
-# We call the emulator for each redshift and then interpolate the result
-# onto our desired k_eval grid.
 print("\nRunning emulator predictions...")
+z_list = [0.0, 0.5, 1.0, 1.5, 2.0]
 predictions = {}
-for z_val in [0.0, 0.5, 1.0, 1.5, 2.0]:
-    # The get_boost function returns the emulator's k-grid and the S(k) on that grid
-    # Sk_emu = bfcemu.get_boost(bcmdict, z=z_val, q2=q2_val)
+for z_val in z_list:
     Sk_emu = bfcemu.get_boost_differentiable(bcmdict_jnp, z=z_val, q2=q2_val)
-    k_emu = bfcemu.k
-    # We interpolate the result onto our specific k_eval grid for plotting
-    p_interp = np.interp(k_eval, k_emu, Sk_emu)
+    p_interp = np.interp(k_eval, bfcemu.k, np.array(Sk_emu))
     predictions[z_val] = p_interp
-    print(f" - Prediction for z={z_val} complete.")
+    print(f"  z={z_val:.1f} done.")
 
 # --- 4. Read the BAHAMAS data for comparison ---
 try:
     BAH = pickle.load(open('BAHAMAS_data.pkl', 'rb'))
 except FileNotFoundError:
-    print("\nWarning: 'BAHAMAS_data.pkl' not found. Plot will only show emulated results.")
+    print("\nWarning: 'BAHAMAS_data.pkl' not found.")
     BAH = None
 
 # --- 5. Compute Derivatives for z=0.5, q2=0.7 ---
-print("\nComputing derivatives...")
+print("\nComputing Jacobian...")
+derivatives = jax.jacfwd(
+    lambda p: bfcemu.get_boost_differentiable(p, z=0.5, q2=0.7)
+)(bcmdict_jnp)
+print("  Done.")
 
-# Define a function that takes parameters and returns the boost
-def boost_function(params):
-    return bfcemu.get_boost_differentiable(params, z=0.5, q2=0.7)
+# ---------------------------------------------------------------------------
+# Global plot style
+# ---------------------------------------------------------------------------
+rcParams.update({
+    'font.family':          'sans-serif',
+    'font.size':            12,
+    'axes.labelsize':       13,
+    'axes.titlesize':       12,
+    'axes.linewidth':       1.2,
+    'xtick.direction':      'in',
+    'ytick.direction':      'in',
+    'xtick.top':            True,
+    'ytick.right':          True,
+    'xtick.minor.visible':  True,
+    'ytick.minor.visible':  True,
+    'legend.framealpha':    0.9,
+    'legend.edgecolor':     '0.75',
+    'legend.fontsize':      11,
+})
 
-# Compute the Jacobian (derivatives with respect to all parameters)
-jacobian_fn = jax.jacfwd(boost_function)
-derivatives = jacobian_fn(bcmdict_jnp)
+# Colormap for redshift sequence
+cmap = plt.get_cmap('plasma')
+z_colors = {z: cmap(i / (len(z_list) - 1)) for i, z in enumerate(z_list)}
 
-print("Derivatives computed successfully.")
+# ---------------------------------------------------------------------------
+# Figure 1: S(k) predictions
+# ---------------------------------------------------------------------------
+fig1, ax = plt.subplots(figsize=(6, 4.5))
 
-# --- 6. Plot the Results ---
-rcParams['font.family'] = 'sans-serif'
-rcParams['axes.labelsize'] = 14
-rcParams['font.size'] = 14
-rcParams['axes.linewidth'] = 1.6
+for z in z_list:
+    col = z_colors[z]
+    # BAHAMAS comparison (thick, semi-transparent background line)
+    if BAH is not None:
+        bah_key = f'z={int(z) if z % 1 == 0 else z}'
+        if bah_key in BAH:
+            ax.semilogx(BAH[bah_key]['k'], BAH[bah_key]['S'],
+                        color=col, lw=6, alpha=0.2, solid_capstyle='round')
+    ax.semilogx(k_eval, predictions[z],
+                color=col, lw=2, label=f'$z = {z:.1f}$')
 
-# First figure: Original boost predictions
-plt.figure(figsize=(15, 9))
-axes_map = {
-    0.0: plt.subplot2grid((2, 6), (0, 0), colspan=2),
-    0.5: plt.subplot2grid((2, 6), (0, 2), colspan=2),
-    1.0: plt.subplot2grid((2, 6), (0, 4), colspan=2),
-    1.5: plt.subplot2grid((2, 6), (1, 1), colspan=2),
-    2.0: plt.subplot2grid((2, 6), (1, 3), colspan=2),
-}
+ax.axhline(1.0, ls=':', color='k', lw=0.8, alpha=0.4)
+ax.set_xscale('log')
+ax.set_xlim(0.09, 12)
+ax.set_ylim(0.68, 1.05)
+ax.set_xlabel(r'$k\;[h\,\mathrm{Mpc}^{-1}]$')
+ax.set_ylabel(r'$\mathcal{S}(k) = P_{\rm hydro}/P_{\rm DMO}$')
+ax.legend(loc='lower left', ncol=2)
+ax.grid(True, which='both', alpha=0.15, lw=0.6)
+ax.set_title(r'Baryonic suppression — BCemu2025', pad=8)
 
-for z, ax in axes_map.items():
-    ax.set_title(f'$z={z}$')
-    if BAH and f'z={int(z) if z%1==0 else z}' in BAH:
-        ax.semilogx(BAH[f'z={int(z) if z%1==0 else z}']['k'], 
-                   BAH[f'z={int(z) if z%1==0 else z}']['S'], 
-                   '-', c='C0', lw=5, alpha=0.2, label='BAHAMAS')
-    ax.semilogx(k_eval, predictions[z], '--', c='b', lw=3, label='Emulated')
-    ax.set_xlim(0.09, 12)
-    ax.set_ylim(0.7, 1.08)
-    ax.set_xlabel(r'$k$ ($h$ Mpc$^{-1}$)')
-    ax.set_ylabel(r'$\mathcal{S}(k)$')
-
-axes_map[0.0].legend()
-plt.suptitle('Baryonic Boost Predictions', fontsize=24, y=0.98)
-plt.tight_layout()
+fig1.tight_layout()
+# fig1.savefig('BCemu2025_boost.pdf', bbox_inches='tight')
 plt.show()
 
-# Second figure: Derivatives at z=0.5, q2=0.7
-fig, axes = plt.subplots(2, 4, figsize=(16, 8))
-axes = axes.flatten()
+# ---------------------------------------------------------------------------
+# Figure 2: Jacobian ∂S/∂θ at z=0.5, q2=0.7
+# ---------------------------------------------------------------------------
+param_names = bfcemu.param_names
+n_params = len(param_names)           # 8
+n_cols = 4
+n_rows = int(np.ceil(n_params / n_cols))
 
-k_emu = bfcemu.k
-colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+tab_colors = plt.get_cmap('tab10').colors
 
-for i, param_name in enumerate(bfcemu.param_names):
-    ax = axes[i]
-    
-    # Get the derivative for this parameter
-    param_derivative = derivatives[:,i]
-    
-    # Interpolate onto k_eval for smoother plotting
-    deriv_interp = np.interp(k_eval, k_emu, param_derivative)
-    
-    ax.semilogx(k_eval, deriv_interp, '-', color=colors[i], lw=3, 
-                label=rf'd$\mathcal{{S}}$/d({param_name})')
-    ax.set_xlabel(r'$k$ ($h$ Mpc$^{-1}$)')
-    ax.set_ylabel(rf'd$\mathcal{{S}}$/d({param_name})')
-    ax.set_title(rf'Derivative w.r.t. {param_name}')
-    ax.grid(True, alpha=0.3)
+fig2, axes2 = plt.subplots(n_rows, n_cols,
+                            figsize=(14, 3.6 * n_rows),
+                            sharex=True)
+axes2_flat = axes2.flatten()
+
+k_emu = np.array(bfcemu.k)
+
+for i, pname in enumerate(param_names):
+    ax = axes2_flat[i]
+    col = tab_colors[i % 10]
+
+    deriv = np.interp(k_eval, k_emu, np.array(derivatives[:, i]))
+
+    # Filled area (split by sign for clarity)
+    ax.fill_between(k_eval, 0, deriv,
+                    where=(deriv >= 0), color=col, alpha=0.18, lw=0)
+    ax.fill_between(k_eval, 0, deriv,
+                    where=(deriv <  0), color=col, alpha=0.18, lw=0)
+    ax.semilogx(k_eval, deriv, color=col, lw=2)
+    ax.axhline(0, color='k', lw=0.8, ls='--', alpha=0.35)
+
     ax.set_xlim(0.09, 12)
-    
-    # Add a horizontal line at zero for reference
-    ax.axhline(y=0, color='black', linestyle='--', alpha=0.5, linewidth=1)
+    ax.grid(True, which='both', alpha=0.15, lw=0.6)
 
-plt.suptitle('Derivatives of Baryonic Boost at z=0.5, q2=0.7', fontsize=24, y=0.98)
-plt.tight_layout()
+    # Panel label and parameter name
+    ax.set_title(PARAM_LATEX.get(pname, pname), pad=5)
+    ax.text(0.04, 0.95, f'({chr(ord("a") + i)})',
+            transform=ax.transAxes, fontsize=10,
+            va='top', ha='left', color='0.35')
+
+    # y-label only on leftmost column
+    if i % n_cols == 0:
+        ax.set_ylabel(r'$\partial\mathcal{S}/\partial\theta$')
+
+# x-labels only on bottom row
+for ax in axes2[n_rows - 1]:
+    ax.set_xlabel(r'$k\;[h\,\mathrm{Mpc}^{-1}]$')
+
+# Hide unused subplots (if any)
+for ax in axes2_flat[n_params:]:
+    ax.set_visible(False)
+
+fig2.suptitle(
+    r'Jacobian $\partial\mathcal{S}/\partial\theta$ at $z=0.5,\;q_2=0.7$',
+    y=1.01, fontsize=13,
+)
+fig2.tight_layout()
+# fig2.savefig('BCemu2025_derivatives.pdf', bbox_inches='tight')
 plt.show()
 
-# --- 7. Print some summary statistics ---
-print("\n--- Derivative Summary ---")
-print(f"Parameter values used:")
-for i, param_name in enumerate(bfcemu.param_names):
-    print(f"  {param_name}: {bcmdict[param_name]:.4f}")
+# ---------------------------------------------------------------------------
+# Print summary
+# ---------------------------------------------------------------------------
+print("\n--- Parameter values ---")
+for pname in param_names:
+    print(f"  {pname:12s} = {bcmdict[pname]:.4f}")
 
-print(f"\nDerivative statistics at z=0.5, q2=0.7:")
-for i, param_name in enumerate(bfcemu.param_names):
-    param_derivative = derivatives[:,i]
-    deriv_interp = np.interp(k_eval, k_emu, param_derivative)
-    max_abs_deriv = np.max(np.abs(deriv_interp))
-    print(f"  {param_name}: max |dS/d({param_name})| = {max_abs_deriv:.4f}")
+print("\n--- max |∂S/∂θ| at z=0.5, q2=0.7 ---")
+for i, pname in enumerate(param_names):
+    deriv = np.interp(k_eval, k_emu, np.array(derivatives[:, i]))
+    print(f"  {pname:12s}   {np.max(np.abs(deriv)):.5f}")
 
-# --- 8. Optional: Show parameter sensitivity at a specific k-value ---
-k_specific = 1.0  # h/Mpc
-k_idx = np.argmin(np.abs(k_eval - k_specific))
-
-print(f"\nDerivatives at k = {k_specific} h/Mpc:")
-for i, param_name in enumerate(bfcemu.param_names):
-    param_derivative = np.array(derivatives[:,i])
-    k_emu_np = np.array(k_emu)
-    deriv_interp = np.interp(k_eval, k_emu_np, param_derivative)
-    deriv_at_k = deriv_interp[k_idx]
-    print(rf"  d$\mathcal{{S}}$/d({param_name}) = {deriv_at_k:.6f}")
-
-print("\nAnalysis complete!")
+print("\nDone.")

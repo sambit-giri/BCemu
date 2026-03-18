@@ -14,5 +14,7 @@ nose
 # joblib
 # onnxruntime
 # onnx
-jax 
-flax
+msgpack
+# optional backends (install as needed):
+# pip install jax flax       # for backend='jax'
+# pip install torch           # for backend='torch'
