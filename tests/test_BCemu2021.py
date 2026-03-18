@@ -1,4 +1,5 @@
 import pytest
+pytest.importorskip("smt", reason="smt is not installed; skipping BCemu2021 tests. Install with: pip install smt==1.0.0")
 import numpy as np
 import BCemu
 
