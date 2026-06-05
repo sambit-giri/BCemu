@@ -282,7 +282,14 @@ class HydroSimDataSk:
             hydro_fn, dmo_fn = self._FLAMINGO_PAIRS[self.name]
             hydro = HydroSimDataPk._load_flamingo_hdf5(os.path.join(d, 'FLAMINGO', hydro_fn))
             dmo   = HydroSimDataPk._load_flamingo_hdf5(os.path.join(d, 'FLAMINGO', dmo_fn))
-            self._data = {'z': hydro['z'], 'k': hydro['k'], 'Sk': hydro['Pk'] / dmo['Pk']}
+            if hydro['k'].shape == dmo['k'].shape and np.allclose(hydro['k'], dmo['k']):
+                Pk_dmo_on_hydro_k = dmo['Pk']
+            else:
+                Pk_dmo_on_hydro_k = np.array([
+                    np.interp(hydro['k'], dmo['k'], dmo['Pk'][i])
+                    for i in range(len(hydro['z']))
+                ])
+            self._data = {'z': hydro['z'], 'k': hydro['k'], 'Sk': hydro['Pk'] / Pk_dmo_on_hydro_k}
 
         else:
             avail = self.available()
