@@ -160,5 +160,46 @@ def download_emulators(model_name='BCemu2021', force_download=False):
     else:
         print(f"Model '{model_name}' not recognized. Please choose 'BCemu2021' or 'BCemu2025'.")
         print('No emulators downloaded.')
-    
+
     return None
+
+def download_hydrosims(force_download=False):
+    """
+    Downloads HydroSims reference data (BAHAMAS, OWLS, C-OWLS, FLAMINGO, TNG, EAGLE, etc.)
+    from the BCemu GitHub release assets. Files are extracted to the package input_data/HydroSims/
+    directory and cached for subsequent use.
+
+    Parameters
+    ----------
+    force_download : bool
+        If True, re-download and overwrite existing files. Defaults to False.
+
+    Returns
+    -------
+    str
+        Path to the HydroSims data directory.
+    """
+    package_name = "BCemu"
+    path_to_input_data = get_package_resource_path(package_name, 'input_data')
+    hydrosims_dir = os.path.join(path_to_input_data, 'HydroSims')
+
+    if not force_download and os.path.exists(hydrosims_dir) and len(os.listdir(hydrosims_dir)) > 5:
+        return hydrosims_dir
+
+    os.makedirs(hydrosims_dir, exist_ok=True)
+
+    base_url = 'https://github.com/sambit-giri/BCemu/releases/download/v2.0.4/'
+    zip_filename = 'HydroSims_v2.0.4.zip'
+    zip_path = os.path.join(path_to_input_data, zip_filename)
+
+    print(f"Downloading HydroSims data...")
+    _download_file(base_url + zip_filename, zip_path, force=force_download)
+
+    import zipfile
+    print(f"Extracting to {hydrosims_dir}...")
+    with zipfile.ZipFile(zip_path, 'r') as zf:
+        zf.extractall(path_to_input_data)
+    os.remove(zip_path)
+
+    print('HydroSims data ready.')
+    return hydrosims_dir
