@@ -19,8 +19,9 @@ except importlib.metadata.PackageNotFoundError:
 
 from .BaryonEffectsEmulator import *
 from . import download
-# from . import kpls 
+# from . import kpls
 from .datasets import *
+from .spectra import BaryonicCAMB, HMcodeCAMB, HydroSimCAMB, BCemuCAMB
 
 #Suppress warnings from zero-divisions and nans
 import numpy

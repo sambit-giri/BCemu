@@ -6,3 +6,4 @@ src/*.egg-info
 src/BCemu/input_data/kpls_emulator_z*
 src/BCemu/input_data/BCemu2025_*
 work_dir
+src/BCemu/input_data/HydroSims/

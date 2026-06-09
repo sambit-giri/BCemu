@@ -14,7 +14,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(name='BCemu',
-      version='2.0.4',
+      version='2.0.5',
       description='Using emulators to implement baryonic effects.',
       url=BCemu_link,
       author='Sambit Giri',
@@ -23,6 +23,9 @@ setup(name='BCemu',
       package_dir={"": "src"},
       package_data={'BCemu': ['input_data/*']},
       install_requires=requirements,
+      extras_require={
+          'spectra': ['camb'],
+      },
       # zip_safe=False,
       include_package_data=True,
       long_description=open('README.md').read(),
