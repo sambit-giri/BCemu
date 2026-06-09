@@ -50,9 +50,11 @@ class BaryonicCAMB:
         tau=0.0544, ns=0.9649, As=np.exp(3.044) * 1e-10
     )
     C_LIGHT = 2.99792458e5  # km/s
-    _VALID_K_EXTRAP = (None, 1, 'fixed', 'same', 'extrapolate')
+    _VALID_K_EXTRAP  = (None, 1, 'fixed', 'same', 'extrapolate')
+    _VALID_NL_MODEL  = ('mead2020', 'takahashi', 'halofit')
 
-    def __init__(self, cosmo_params=None, lmax=3000, kmax=50.0, k_extrap=None):
+    def __init__(self, cosmo_params=None, lmax=3000, kmax=50.0,
+                 k_extrap=None, nl_model='mead2020'):
         if not HAS_CAMB:
             raise ImportError(
                 "camb is required for the spectra module. "
@@ -62,11 +64,16 @@ class BaryonicCAMB:
             raise ValueError(
                 f"k_extrap must be one of {self._VALID_K_EXTRAP}, got {k_extrap!r}"
             )
+        if nl_model not in self._VALID_NL_MODEL:
+            raise ValueError(
+                f"nl_model must be one of {self._VALID_NL_MODEL}, got {nl_model!r}"
+            )
         self.cosmo_params = cosmo_params if cosmo_params is not None \
             else self.PLANCK2018.copy()
-        self.lmax = lmax
-        self.kmax = kmax
+        self.lmax    = lmax
+        self.kmax    = kmax
         self.k_extrap = k_extrap
+        self.nl_model = nl_model
 
         print("Setting up CAMB (background + CMB transfer functions)...")
         self._results_bg = self._run_camb_cmb()
@@ -111,7 +118,7 @@ class BaryonicCAMB:
         pars = self._make_cosmo_pars()
         pars.set_matter_power(redshifts=list(z_nl), kmax=self.kmax)
         pars.NonLinear = camb_model.NonLinear_both
-        pars.NonLinearModel.set_params('mead2020')
+        pars.NonLinearModel.set_params(self.nl_model)
         res = camb.get_results(pars)
         _, self._z_nl, self._pk_nl_dmo = \
             res.get_nonlinear_matter_power_spectrum(hubble_units=False, k_hunit=False)
@@ -385,7 +392,7 @@ class HMcodeCAMB(BaryonicCAMB):
 
     def __init__(self, cosmo_params=None, baryonic_feedback='mead2020',
                  logT_AGN=7.8, A_baryon=3.13, eta_baryon=0.603,
-                 lmax=3000, kmax=50.0, k_extrap=None):
+                 lmax=3000, kmax=50.0, k_extrap=None, nl_model='mead2020'):
         if baryonic_feedback not in self._CAMB_MODEL:
             raise ValueError(
                 f"baryonic_feedback must be one of {list(self._CAMB_MODEL)}, "
@@ -396,7 +403,7 @@ class HMcodeCAMB(BaryonicCAMB):
         self.A_baryon   = A_baryon
         self.eta_baryon = eta_baryon
         super().__init__(cosmo_params=cosmo_params, lmax=lmax, kmax=kmax,
-                         k_extrap=k_extrap)
+                         k_extrap=k_extrap, nl_model=nl_model)
         print(f"Building HMcode ({baryonic_feedback}) feedback grid...")
         self._setup_feedback_grid()
         print(f"HMcodeCAMB ({baryonic_feedback}) ready.")
@@ -508,10 +515,10 @@ class HydroSimCAMB(BaryonicCAMB):
     """
 
     def __init__(self, sim_name, cosmo_params=None, lmax=3000, kmax=50.0,
-                 k_extrap=None):
+                 k_extrap=None, nl_model='mead2020'):
         self.sim_name = sim_name
         super().__init__(cosmo_params=cosmo_params, lmax=lmax, kmax=kmax,
-                         k_extrap=k_extrap)
+                         k_extrap=k_extrap, nl_model=nl_model)
         print(f"  Loading BCemu data for {sim_name}...", end=' ', flush=True)
         self._setup_hydrosim_boost()
         print("done.")
@@ -584,7 +591,8 @@ class BCemuCAMB(BaryonicCAMB):
     """
 
     def __init__(self, bcm_params, baryonic_feedback='BCemu2025', q2=0.70,
-                 cosmo_params=None, lmax=3000, kmax=50.0, k_extrap=None):
+                 cosmo_params=None, lmax=3000, kmax=50.0, k_extrap=None,
+                 nl_model='mead2020'):
         _valid = ('BCemu2025', 'BCemu2021')
         if baryonic_feedback not in _valid:
             raise ValueError(
@@ -595,7 +603,7 @@ class BCemuCAMB(BaryonicCAMB):
         self.baryonic_feedback = baryonic_feedback
         self.q2 = q2
         super().__init__(cosmo_params=cosmo_params, lmax=lmax, kmax=kmax,
-                         k_extrap=k_extrap)
+                         k_extrap=k_extrap, nl_model=nl_model)
         print(f"Building BCemu ({baryonic_feedback}) suppression grid...")
         self._setup_emu_boost()
         print(f"BCemuCAMB ({baryonic_feedback}) ready.")
