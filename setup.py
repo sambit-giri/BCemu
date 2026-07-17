@@ -24,7 +24,7 @@ setup(name='BCemu',
       package_data={'BCemu': ['input_data/*']},
       install_requires=requirements,
       extras_require={
-          'spectra': ['camb'],
+          'spectra': ['camb>=1.6.6'],
       },
       # zip_safe=False,
       include_package_data=True,

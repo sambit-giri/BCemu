@@ -11,8 +11,10 @@ try:
     import camb
     import camb.model as camb_model
     HAS_CAMB = True
+    HAS_EXTERNAL_NL_RATIO = hasattr(camb.nonlinear, 'ExternalNonLinearRatio')
 except ImportError:
     HAS_CAMB = False
+    HAS_EXTERNAL_NL_RATIO = False
 
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
@@ -43,6 +45,20 @@ class BaryonicCAMB:
         Maximum multipole for CMB spectra.
     kmax : float
         Maximum wavenumber [Mpc^-1] for matter power spectrum grids.
+    lensing_method : {'camb', 'limber'}
+        How C_L^kk (and the consistent lensed CMB spectra) are computed.
+        'camb' (default) uses CAMB's own non-Limber lensing integration fed
+        P_dmb via ExternalNonLinearRatio — matches CAMB's native precision.
+        'limber' uses a hand-rolled Limber integral (faster, less accurate).
+    lens_potential_accuracy : int, optional
+        Passed to CAMB's ``set_for_lmax``. At the CAMB default of 1, C_L^kk
+        under-converges badly near L=lmax (e.g. ~14% low at L=lmax=3000,
+        ~50% low at L=lmax=6000) regardless of ``lensing_method`` — it
+        affects the 'limber' path too, since C_TT/EE/BB/TE re-lensing and
+        the unlensed spectra both come from ``self._results_bg``, which is
+        built with this same setting. Default (None) auto-scales with
+        ``lmax`` (4 up to lmax~3000, rising to 8 by lmax=6000) so C_L^kk
+        stays accurate out to L=lmax without manual tuning.
     """
 
     PLANCK2018 = dict(
@@ -52,9 +68,11 @@ class BaryonicCAMB:
     C_LIGHT = 2.99792458e5  # km/s
     _VALID_K_EXTRAP  = (None, 1, 'fixed', 'same', 'extrapolate')
     _VALID_NL_MODEL  = ('mead2020', 'takahashi', 'halofit')
+    _VALID_LENSING_METHOD = ('camb', 'limber')
 
     def __init__(self, cosmo_params=None, lmax=3000, kmax=50.0,
-                 k_extrap=None, nl_model='mead2020'):
+                 k_extrap=None, nl_model='mead2020', lensing_method='camb',
+                 lens_potential_accuracy=None):
         if not HAS_CAMB:
             raise ImportError(
                 "camb is required for the spectra module. "
@@ -68,12 +86,34 @@ class BaryonicCAMB:
             raise ValueError(
                 f"nl_model must be one of {self._VALID_NL_MODEL}, got {nl_model!r}"
             )
+        if lensing_method not in self._VALID_LENSING_METHOD:
+            raise ValueError(
+                f"lensing_method must be one of {self._VALID_LENSING_METHOD}, "
+                f"got {lensing_method!r}"
+            )
+        if lensing_method == 'camb' and not HAS_EXTERNAL_NL_RATIO:
+            raise ImportError(
+                f"lensing_method='camb' requires camb>=1.6.6 "
+                f"(camb.nonlinear.ExternalNonLinearRatio), but installed "
+                f"camb=={camb.__version__} does not have it. "
+                f"Upgrade with: pip install -U 'camb>=1.6.6'  "
+                f"or pass lensing_method='limber' instead."
+            )
         self.cosmo_params = cosmo_params if cosmo_params is not None \
             else self.PLANCK2018.copy()
         self.lmax    = lmax
         self.kmax    = kmax
         self.k_extrap = k_extrap
         self.nl_model = nl_model
+        self.lensing_method = lensing_method
+
+        if lens_potential_accuracy is None:
+            # CAMB's C_L^phiphi under-converges badly near the requested
+            # lmax at the default accuracy=1 (e.g. ~14% low at L=lmax=3000,
+            # ~50% low at L=lmax=6000). Scale accuracy up with lmax so the
+            # spectrum stays accurate all the way to L=lmax by default.
+            lens_potential_accuracy = int(np.clip(np.ceil(lmax / 750.0), 4, 8))
+        self.lens_potential_accuracy = lens_potential_accuracy
 
         print("Setting up CAMB (background + CMB transfer functions)...")
         self._results_bg = self._run_camb_cmb()
@@ -98,7 +138,8 @@ class BaryonicCAMB:
 
     def _run_camb_cmb(self):
         pars = self._make_cosmo_pars()
-        pars.set_for_lmax(self.lmax, lens_potential_accuracy=1)
+        pars.set_for_lmax(self.lmax,
+                          lens_potential_accuracy=self.lens_potential_accuracy)
         return camb.get_results(pars)
 
     def _setup_pk_grids(self):
@@ -311,12 +352,71 @@ class BaryonicCAMB:
         integrand = pk_Lchi * kernel[np.newaxis, :]
         return _trapz(integrand, chi_int, axis=1)
 
+    def _camb_lens_spectrum(self, lmax):
+        """
+        Compute C_L^kk and lensed/unlensed CMB spectra via CAMB's own
+        non-Limber lensing integration, fed the modified P_dmb through a
+        ``camb.nonlinear.ExternalNonLinearRatio`` = sqrt(P_dmb / P_lin) grid.
+
+        This matches CAMB's native precision (as used e.g. by
+        ``get_lens_potential_cls`` for real analyses) instead of the hand-
+        rolled Limber sum, and reuses a single self-consistent CAMB run for
+        both C_L^kk and the lensed TT/EE/BB/TE spectra.
+        """
+        print("  Computing C_L^kk via CAMB internal lensing "
+              "(ExternalNonLinearRatio)...", end=' ', flush=True)
+
+        h = self.cosmo_params['H0'] / 100.0
+        k_h = self._k_grid / h
+        z   = self._z_lin
+
+        ratio = np.ones((len(z), len(k_h)))
+        mask_nl = z <= self._z_nl[-1]
+        if mask_nl.any():
+            pk_nl  = self._eval_pk_nl(self._k_grid, z[mask_nl])
+            pk_lin = self._eval_pk_lin(self._k_grid, z[mask_nl])
+            Sk     = self.S(self._k_grid, z[mask_nl])
+            ratio[mask_nl] = np.sqrt(
+                np.clip(pk_nl * Sk / pk_lin, 0.0, None)
+            )
+
+        pars = self._make_cosmo_pars()
+        pars.set_for_lmax(lmax,
+                          lens_potential_accuracy=self.lens_potential_accuracy)
+        pars.NonLinear = camb_model.NonLinear_both
+        ext_ratio = camb.nonlinear.ExternalNonLinearRatio()
+        ext_ratio.set_ratio(k_h, z, ratio)
+        pars.NonLinearModel = ext_ratio
+        res = camb.get_results(pars)
+
+        ell  = np.arange(lmax + 1)
+        clpp = res.get_lens_potential_cls(lmax=lmax, raw_cl=True)[:, 0]
+        ckk  = np.zeros(lmax + 1)
+        ckk[2:] = (ell[2:] * (ell[2:] + 1.0))**2 / 4.0 * clpp[2:]
+
+        lensed = res.get_lensed_scalar_cls(
+            lmax=lmax, CMB_unit='muK', raw_cl=True
+        )
+        unlensed = res.get_unlensed_scalar_cls(
+            lmax=lmax, CMB_unit='muK', raw_cl=True
+        )
+        print("done.")
+        return ckk, lensed, unlensed
+
     def cmb_spectrum(self, lmax=None):
         """
         Compute lensed and unlensed CMB power spectra driven by P_dmb.
 
         Baryonic feedback enters TT, EE, BB, and TE through the modified
-        CMB lensing potential derived from P_dmb via the Limber integral.
+        CMB lensing potential derived from P_dmb.
+
+        ``self.lensing_method`` selects how C_L^kk (and the consistent
+        lensed spectra) are computed:
+          'camb'   (default) — CAMB's own non-Limber lensing integration,
+                     fed P_dmb via ExternalNonLinearRatio. Matches CAMB's
+                     native precision (e.g. get_lens_potential_cls).
+          'limber' — hand-rolled Limber integral (faster, less accurate,
+                     useful for quick checks or cross-validation).
 
         Returns
         -------
@@ -335,22 +435,25 @@ class BaryonicCAMB:
 
         ell = np.arange(lmax + 1)
 
-        print("  Computing C_L^kk via Limber integral...", end=' ', flush=True)
-        ckk_vals = self._limber_ckk(np.arange(2, lmax + 1))
-        ckk = np.zeros(lmax + 1)
-        ckk[2:] = ckk_vals
-        print("done.")
+        if self.lensing_method == 'camb':
+            ckk, lensed, unlensed = self._camb_lens_spectrum(lmax)
+        else:
+            print("  Computing C_L^kk via Limber integral...", end=' ', flush=True)
+            ckk_vals = self._limber_ckk(np.arange(2, lmax + 1))
+            ckk = np.zeros(lmax + 1)
+            ckk[2:] = ckk_vals
+            print("done.")
 
-        clpp = np.zeros(self._camb_lmax + 1)
-        clpp[2:lmax + 1] = 4.0 * ckk[2:] / (2.0 * np.pi)
+            clpp = np.zeros(self._camb_lmax + 1)
+            clpp[2:lmax + 1] = 4.0 * ckk[2:] / (2.0 * np.pi)
 
-        lensed = self._results_bg.get_lensed_cls_with_spectrum(
-            clpp, lmax=lmax, CMB_unit='muK', raw_cl=True
-        )  # (lmax+1, 4): TT, EE, BB, TE
+            lensed = self._results_bg.get_lensed_cls_with_spectrum(
+                clpp, lmax=lmax, CMB_unit='muK', raw_cl=True
+            )  # (lmax+1, 4): TT, EE, BB, TE
 
-        unlensed = self._results_bg.get_unlensed_scalar_cls(
-            lmax=lmax, CMB_unit='muK', raw_cl=True
-        )  # (lmax+1, 4): TT, EE, BB, TE
+            unlensed = self._results_bg.get_unlensed_scalar_cls(
+                lmax=lmax, CMB_unit='muK', raw_cl=True
+            )  # (lmax+1, 4): TT, EE, BB, TE
 
         return dict(
             ell=ell, C_kappakappa=ckk,
@@ -392,7 +495,8 @@ class HMcodeCAMB(BaryonicCAMB):
 
     def __init__(self, cosmo_params=None, baryonic_feedback='mead2020',
                  logT_AGN=7.8, A_baryon=3.13, eta_baryon=0.603,
-                 lmax=3000, kmax=50.0, k_extrap=None, nl_model='mead2020'):
+                 lmax=3000, kmax=50.0, k_extrap=None, nl_model='mead2020',
+                 lensing_method='camb', lens_potential_accuracy=None):
         if baryonic_feedback not in self._CAMB_MODEL:
             raise ValueError(
                 f"baryonic_feedback must be one of {list(self._CAMB_MODEL)}, "
@@ -403,7 +507,9 @@ class HMcodeCAMB(BaryonicCAMB):
         self.A_baryon   = A_baryon
         self.eta_baryon = eta_baryon
         super().__init__(cosmo_params=cosmo_params, lmax=lmax, kmax=kmax,
-                         k_extrap=k_extrap, nl_model=nl_model)
+                         k_extrap=k_extrap, nl_model=nl_model,
+                         lensing_method=lensing_method,
+                         lens_potential_accuracy=lens_potential_accuracy)
         print(f"Building HMcode ({baryonic_feedback}) feedback grid...")
         self._setup_feedback_grid()
         print(f"HMcodeCAMB ({baryonic_feedback}) ready.")
@@ -515,10 +621,13 @@ class HydroSimCAMB(BaryonicCAMB):
     """
 
     def __init__(self, sim_name, cosmo_params=None, lmax=3000, kmax=50.0,
-                 k_extrap=None, nl_model='mead2020'):
+                 k_extrap=None, nl_model='mead2020', lensing_method='camb',
+                 lens_potential_accuracy=None):
         self.sim_name = sim_name
         super().__init__(cosmo_params=cosmo_params, lmax=lmax, kmax=kmax,
-                         k_extrap=k_extrap, nl_model=nl_model)
+                         k_extrap=k_extrap, nl_model=nl_model,
+                         lensing_method=lensing_method,
+                         lens_potential_accuracy=lens_potential_accuracy)
         print(f"  Loading BCemu data for {sim_name}...", end=' ', flush=True)
         self._setup_hydrosim_boost()
         print("done.")
@@ -592,7 +701,8 @@ class BCemuCAMB(BaryonicCAMB):
 
     def __init__(self, bcm_params, baryonic_feedback='BCemu2025', q2=0.70,
                  cosmo_params=None, lmax=3000, kmax=50.0, k_extrap=None,
-                 nl_model='mead2020'):
+                 nl_model='mead2020', lensing_method='camb',
+                 lens_potential_accuracy=None):
         _valid = ('BCemu2025', 'BCemu2021')
         if baryonic_feedback not in _valid:
             raise ValueError(
@@ -603,7 +713,9 @@ class BCemuCAMB(BaryonicCAMB):
         self.baryonic_feedback = baryonic_feedback
         self.q2 = q2
         super().__init__(cosmo_params=cosmo_params, lmax=lmax, kmax=kmax,
-                         k_extrap=k_extrap, nl_model=nl_model)
+                         k_extrap=k_extrap, nl_model=nl_model,
+                         lensing_method=lensing_method,
+                         lens_potential_accuracy=lens_potential_accuracy)
         print(f"Building BCemu ({baryonic_feedback}) suppression grid...")
         self._setup_emu_boost()
         print(f"BCemuCAMB ({baryonic_feedback}) ready.")
