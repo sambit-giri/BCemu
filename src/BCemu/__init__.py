@@ -22,6 +22,8 @@ from . import download
 # from . import kpls
 from .datasets import *
 from .spectra import BaryonicCAMB, HMcodeCAMB, HydroSimCAMB, BCemuCAMB
+from . import backend
+from . import cosmology
 
 #Suppress warnings from zero-divisions and nans
 import numpy
