@@ -21,7 +21,10 @@ setup(name='BCemu',
       author_email='sambit.giri@gmail.com',
       packages=find_packages("src"),
       package_dir={"": "src"},
-      package_data={'BCemu': ['input_data/*']},
+      package_data={'BCemu': [
+          'input_data/README.rst',
+          'input_data/galaxy_clusters_gas_constraints.xlsx',
+      ]},
       install_requires=requirements,
       extras_require={
           'spectra': ['camb>=1.6.6'],
