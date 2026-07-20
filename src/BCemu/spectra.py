@@ -53,12 +53,14 @@ class BaryonicCAMB:
     lens_potential_accuracy : int, optional
         Passed to CAMB's ``set_for_lmax``. At the CAMB default of 1, C_L^kk
         under-converges badly near L=lmax (e.g. ~14% low at L=lmax=3000,
-        ~50% low at L=lmax=6000) regardless of ``lensing_method`` — it
-        affects the 'limber' path too, since C_TT/EE/BB/TE re-lensing and
-        the unlensed spectra both come from ``self._results_bg``, which is
-        built with this same setting. Default (None) auto-scales with
-        ``lmax`` (4 up to lmax~3000, rising to 8 by lmax=6000) so C_L^kk
-        stays accurate out to L=lmax without manual tuning.
+        ~50% low at L=lmax=6000, ~64% low at L=lmax=10000) regardless of
+        ``lensing_method`` — it affects the 'limber' path too, since
+        C_TT/EE/BB/TE re-lensing and the unlensed spectra both come from
+        ``self._results_bg``, which is built with this same setting.
+        Default (None) auto-scales with ``lmax`` (4 up to lmax~2500, rising
+        to 16 by lmax=10000) so C_L^kk stays within ~0.3% of converged out
+        to L=lmax without manual tuning. Cost is modest throughout (~1-1.5s
+        extra per CAMB call even at accuracy=16-20).
     """
 
     PLANCK2018 = dict(
@@ -110,9 +112,11 @@ class BaryonicCAMB:
         if lens_potential_accuracy is None:
             # CAMB's C_L^phiphi under-converges badly near the requested
             # lmax at the default accuracy=1 (e.g. ~14% low at L=lmax=3000,
-            # ~50% low at L=lmax=6000). Scale accuracy up with lmax so the
-            # spectrum stays accurate all the way to L=lmax by default.
-            lens_potential_accuracy = int(np.clip(np.ceil(lmax / 750.0), 4, 8))
+            # ~50% low at L=lmax=6000, ~64% low at L=lmax=10000). Scale
+            # accuracy up with lmax (checked against a high-accuracy plateau
+            # up to lmax=10000) so the spectrum stays within ~0.3% of
+            # converged all the way to L=lmax by default.
+            lens_potential_accuracy = int(np.clip(np.ceil(lmax / 625.0), 4, 16))
         self.lens_potential_accuracy = lens_potential_accuracy
 
         print("Setting up CAMB (background + CMB transfer functions)...")
